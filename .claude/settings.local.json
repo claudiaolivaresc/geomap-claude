@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:vector-tileserver-147328131785.us-central1.run.app)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
