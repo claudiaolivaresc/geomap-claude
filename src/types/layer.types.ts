@@ -47,6 +47,7 @@ export interface LegendSymbol {
 export type LayerLegend = LegendGradient | LegendSymbol;
 
 export interface LayerMetadata {
+  geothermalRelevance?: string;
   description: string;
   citation?: string;
   source?: string;

@@ -31,7 +31,7 @@ export const useLayerStore = create<LayerStore>()(
     (set, get) => ({
       // State
       activeLayers: new Map(),
-      expandedGroups: new Set(['surface', 'subsurface']),
+      expandedGroups: new Set(['global', 'surface-module', 'subsurface']),
 
       // Actions
       toggleLayer: (layerId) => {
@@ -114,82 +114,93 @@ export const useLayerStore = create<LayerStore>()(
         const sourceId = `source-${layerConfig.id}`;
         const layerId = `layer-${layerConfig.id}`;
 
-        // Remove existing layer/source if they exist
-        if (map.getLayer(layerId)) {
-          map.removeLayer(layerId);
-        }
-        if (map.getSource(sourceId)) {
-          map.removeSource(sourceId);
-        }
-
-        // Get admin overrides from config store
-        const adminOverride = useConfigStore.getState().getOverride(layerConfig.id);
-        const styleOv = adminOverride?.style_overrides || {};
-
-        // Add source
-        if (layerConfig.type === 'raster') {
-          map.addSource(sourceId, {
-            type: 'raster',
-            tiles: layerConfig.source.tiles,
-            tileSize: layerConfig.source.tileSize || 256,
-            ...(layerConfig.source.minzoom != null && { minzoom: layerConfig.source.minzoom }),
-            ...(layerConfig.source.maxzoom != null && { maxzoom: layerConfig.source.maxzoom }),
-          });
-
-          // Build raster paint from config style (raster-color + resampling from test-tileserver)
-          const rasterStyle = layerConfig.style as {
-            paint: Record<string, unknown>;
-          };
-          const rasterPaint: Record<string, unknown> = {
-            'raster-opacity': (styleOv['raster-opacity'] as number) ?? layerConfig.defaultOpacity ?? 0.8,
-          };
-
-          // Resolve color ramp: admin override key → COLOR_RAMPS lookup, else default
-          const rampKey = styleOv['color_ramp'] as string;
-          if (rampKey && COLOR_RAMPS[rampKey]) {
-            rasterPaint['raster-color'] = COLOR_RAMPS[rampKey];
-          } else if (rasterStyle.paint?.['raster-color']) {
-            rasterPaint['raster-color'] = rasterStyle.paint['raster-color'];
+        try {
+          // Remove existing layer/source if they exist
+          if (map.getLayer(layerId)) {
+            map.removeLayer(layerId);
+          }
+          if (map.getSource(sourceId)) {
+            map.removeSource(sourceId);
           }
 
-          rasterPaint['raster-resampling'] =
-            (styleOv['raster-resampling'] as string) ??
-            rasterStyle.paint?.['raster-resampling'] ??
-            'nearest';
+          // Get admin overrides from config store
+          const adminOverride = useConfigStore.getState().getOverride(layerConfig.id);
+          const styleOv = adminOverride?.style_overrides || {};
 
-          map.addLayer({
-            id: layerId,
-            type: 'raster',
-            source: sourceId,
-            paint: rasterPaint,
-          });
-        } else {
-          const vectorStyle = layerConfig.style as {
-            type: string;
-            sourceLayer?: string;
-            paint: Record<string, unknown>;
-          };
+          // Add source
+          if (layerConfig.type === 'raster') {
+            map.addSource(sourceId, {
+              type: 'raster',
+              tiles: layerConfig.source.tiles,
+              tileSize: layerConfig.source.tileSize || 256,
+              ...(layerConfig.source.minzoom != null && { minzoom: layerConfig.source.minzoom }),
+              ...(layerConfig.source.maxzoom != null && { maxzoom: layerConfig.source.maxzoom }),
+            });
 
-          map.addSource(sourceId, {
-            type: 'vector',
-            tiles: layerConfig.source.tiles,
-          });
+            // Build raster paint from config style (raster-color + resampling from test-tileserver)
+            const rasterStyle = layerConfig.style as {
+              paint: Record<string, unknown>;
+            };
+            const rasterPaint: Record<string, unknown> = {
+              'raster-opacity': (styleOv['raster-opacity'] as number) ?? layerConfig.defaultOpacity ?? 0.8,
+            };
 
-          // Merge admin style overrides into vector paint
-          const mergedPaint = { ...vectorStyle.paint };
-          for (const [key, val] of Object.entries(styleOv)) {
-            if (val !== undefined && val !== null && val !== '') {
-              mergedPaint[key] = val;
+            // Resolve color ramp: admin override key → COLOR_RAMPS lookup, else default
+            const rampKey = styleOv['color_ramp'] as string;
+            if (rampKey && COLOR_RAMPS[rampKey]) {
+              rasterPaint['raster-color'] = COLOR_RAMPS[rampKey];
+            } else if (rasterStyle.paint?.['raster-color']) {
+              rasterPaint['raster-color'] = rasterStyle.paint['raster-color'];
             }
-          }
 
-          map.addLayer({
-            id: layerId,
-            type: vectorStyle.type as 'circle' | 'line' | 'fill',
-            source: sourceId,
-            'source-layer': vectorStyle.sourceLayer || `${layerConfig.schema}.${layerConfig.table}`,
-            paint: mergedPaint,
-          });
+            rasterPaint['raster-resampling'] =
+              (styleOv['raster-resampling'] as string) ??
+              rasterStyle.paint?.['raster-resampling'] ??
+              'nearest';
+
+            map.addLayer({
+              id: layerId,
+              type: 'raster',
+              source: sourceId,
+              paint: rasterPaint,
+            });
+          } else {
+            const vectorStyle = layerConfig.style as {
+              type: string;
+              sourceLayer?: string;
+              paint: Record<string, unknown>;
+            };
+
+            map.addSource(sourceId, {
+              type: 'vector',
+              tiles: layerConfig.source.tiles,
+              ...(layerConfig.source.minzoom !== undefined && { minzoom: layerConfig.source.minzoom }),
+              ...(layerConfig.source.maxzoom !== undefined && { maxzoom: layerConfig.source.maxzoom }),
+            });
+
+            // Merge admin style overrides into vector paint
+            const mergedPaint = { ...vectorStyle.paint };
+            for (const [key, val] of Object.entries(styleOv)) {
+              if (val !== undefined && val !== null && val !== '') {
+                mergedPaint[key] = val;
+              }
+            }
+
+            map.addLayer({
+              id: layerId,
+              type: vectorStyle.type as 'circle' | 'line' | 'fill',
+              source: sourceId,
+              'source-layer': vectorStyle.sourceLayer || `${layerConfig.schema}.${layerConfig.table}`,
+              paint: mergedPaint,
+            });
+          }
+        } catch (err) {
+          console.error(`Failed to add layer ${layerConfig.id}:`, err);
+          // Clean up partial state
+          try {
+            if (map.getLayer(layerId)) map.removeLayer(layerId);
+            if (map.getSource(sourceId)) map.removeSource(sourceId);
+          } catch { /* ignore cleanup errors */ }
         }
       },
 
@@ -262,7 +273,7 @@ export const useLayerStore = create<LayerStore>()(
         return {
           ...current,
           activeLayers: new Map(persistedState.activeLayers || []),
-          expandedGroups: new Set(persistedState.expandedGroups || ['surface', 'subsurface']),
+          expandedGroups: new Set(persistedState.expandedGroups || ['global', 'surface-module', 'subsurface']),
         };
       },
     }

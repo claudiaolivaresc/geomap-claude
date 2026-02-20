@@ -13,7 +13,15 @@ interface LayerGroupProps {
 
 // Accent colors per group, styled to fit the navy/sage/orange theme
 const GROUP_COLORS: Record<string, { bg: string; border: string; text: string; accent: string }> = {
+  global:                  { bg: 'bg-[#eef6f3]', border: 'border-[#b4ccc5]', text: 'text-[#141d2d]', accent: 'bg-[#b4ccc5]' },
   surface:                 { bg: 'bg-[#eef6f3]', border: 'border-[#b4ccc5]', text: 'text-[#141d2d]', accent: 'bg-[#b4ccc5]' },
+  'surface-module':        { bg: 'bg-[#eef6f3]', border: 'border-[#b4ccc5]', text: 'text-[#141d2d]', accent: 'bg-[#b4ccc5]' },
+  boundaries:              { bg: 'bg-[#f0f4f8]', border: 'border-[#c0c8d0]', text: 'text-[#141d2d]', accent: 'bg-[#c0c8d0]/30' },
+  infrastructure:          { bg: 'bg-[#fff8ee]', border: 'border-[#ffa925]/40', text: 'text-[#141d2d]', accent: 'bg-[#ffa925]/20' },
+  topography:              { bg: 'bg-[#f2f8ee]', border: 'border-[#8bb87a]/40', text: 'text-[#141d2d]', accent: 'bg-[#8bb87a]/20' },
+  'energy-demand-production': { bg: 'bg-[#fef2ee]', border: 'border-[#e14716]/30', text: 'text-[#141d2d]', accent: 'bg-[#e14716]/15' },
+  resources:               { bg: 'bg-[#eef2f8]', border: 'border-[#5a8cc8]/30', text: 'text-[#141d2d]', accent: 'bg-[#5a8cc8]/15' },
+  surveys:                 { bg: 'bg-[#eef0f8]', border: 'border-[#6b7cc8]/30', text: 'text-[#141d2d]', accent: 'bg-[#6b7cc8]/15' },
   subsurface:              { bg: 'bg-[#fff8ee]', border: 'border-[#ffa925]/40', text: 'text-[#141d2d]', accent: 'bg-[#ffa925]/20' },
   structural:              { bg: 'bg-[#fef2ee]', border: 'border-[#e14716]/30', text: 'text-[#141d2d]', accent: 'bg-[#e14716]/15' },
   'thermal-model':         { bg: 'bg-[#fff5ee]', border: 'border-[#ffa925]/30', text: 'text-[#141d2d]', accent: 'bg-[#ffa925]/15' },
