@@ -1,13 +1,15 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useMapStore, useLayerStore } from '@/stores';
-import { MAP_CONFIG, MAPBOX_ACCESS_TOKEN } from '@/config';
+import { useMapStore, useLayerStore, useConfigStore } from '@/stores';
+import { MAP_CONFIG, MAPBOX_ACCESS_TOKEN, getAllLayers } from '@/config';
+import { queryRasterValues } from '@/lib/rasterQuery';
 
-// Set Mapbox access token
+// Set Mapbox access token and limit parallel tile requests (tileserver is sensitive to concurrency)
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+(mapboxgl as unknown as { maxParallelImageRequests: number }).maxParallelImageRequests = 1;
 
 export function MapCanvas() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -75,9 +77,99 @@ export function MapCanvas() {
       });
     });
 
-    // Handle errors
-    map.on('error', (e) => {
-      console.error('Map error:', e);
+    // Query features on click (vector + raster)
+    const popup = new mapboxgl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '320px' });
+
+    map.on('click', async (e) => {
+      const { activeLayers: layers } = useLayerStore.getState();
+      const allConfigs = getAllLayers();
+      const htmlParts: string[] = [];
+
+      // ── Vector: queryRenderedFeatures ──
+      const visibleVectorIds = allConfigs
+        .filter((cfg) => cfg.type === 'vector' && layers.get(cfg.id)?.visible)
+        .map((cfg) => `layer-${cfg.id}`);
+
+      if (visibleVectorIds.length > 0) {
+        const features = map.queryRenderedFeatures(e.point, { layers: visibleVectorIds });
+        const configState = useConfigStore.getState();
+
+        for (const feat of features) {
+          if (!feat.layer) continue;
+          const layerId = feat.layer.id.replace('layer-', '');
+          const cfg = allConfigs.find((c) => c.id === layerId);
+          const title = cfg?.title || layerId;
+          const props = feat.properties || {};
+
+          // Filter fields: use admin-configured visible_fields if set
+          const override = configState.getOverride(layerId);
+          const allowedFields = override?.visible_fields?.length ? override.visible_fields : null;
+
+          const rows = Object.entries(props)
+            .filter(([k]) => !k.startsWith('_') && k !== 'geom' && k !== 'gid')
+            .filter(([k]) => !allowedFields || allowedFields.includes(k))
+            .map(
+              ([k, v]) =>
+                `<tr><td style="padding:2px 8px 2px 0;font-size:11px;color:#888;white-space:nowrap;">${k}</td>` +
+                `<td style="padding:2px 0;font-size:12px;color:#141d2d;font-weight:500;">${v ?? '—'}</td></tr>`
+            )
+            .join('');
+
+          if (rows) {
+            htmlParts.push(
+              `<div style="padding:6px 0;border-bottom:1px solid #eee;">` +
+              `<div style="font-size:11px;font-weight:600;color:#ffa925;margin-bottom:4px;">${title}</div>` +
+              `<table style="border-collapse:collapse;">${rows}</table></div>`
+            );
+          }
+        }
+      }
+
+      // ── Raster: PostGIS ST_Value (or pixel fallback) ──
+      const visibleRasterConfigs = allConfigs.filter(
+        (cfg) => cfg.type === 'raster' && layers.get(cfg.id)?.visible
+      );
+
+      if (visibleRasterConfigs.length > 0) {
+        // Show popup immediately with vector results + "Querying rasters..."
+        popup
+          .setLngLat(e.lngLat)
+          .setHTML(
+            `<div style="padding:4px;max-height:300px;overflow-y:auto;">` +
+            htmlParts.join('') +
+            `<div style="padding:4px;font-size:13px;color:#666;">Querying rasters...</div></div>`
+          )
+          .addTo(map);
+        const results = await queryRasterValues(
+          e.lngLat.lng,
+          e.lngLat.lat,
+          map.getZoom(),
+          visibleRasterConfigs
+        );
+
+        for (const r of results) {
+          htmlParts.push(
+            `<div style="padding:6px 0;border-bottom:1px solid #eee;">` +
+            `<div style="font-size:11px;color:#888;">${r.title}</div>` +
+            `<div style="font-size:15px;font-weight:600;color:#141d2d;">${r.rawValue} ${r.unit}</div>` +
+            (r.source === 'pixel' ? `<div style="font-size:9px;color:#bbb;">~ approx (tile pixel)</div>` : '') +
+            `</div>`
+          );
+        }
+      }
+
+      if (htmlParts.length === 0) return;
+
+      popup
+        .setLngLat(e.lngLat)
+        .setHTML(`<div style="padding:4px;max-height:300px;overflow-y:auto;">${htmlParts.join('')}</div>`)
+        .addTo(map);
+    });
+
+    // Handle errors (suppress tile-loading failures — expected for empty/missing tiles)
+    map.on('error', (e: mapboxgl.ErrorEvent & Record<string, unknown>) => {
+      if (e.sourceId || e.tile || (e.error as unknown as Record<string, unknown>)?.status != null) return;
+      console.error('Map error:', e.error?.message || e.error || e);
     });
 
     return () => {

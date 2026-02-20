@@ -16,7 +16,7 @@ export interface RasterStyle {
   paint: {
     'raster-opacity'?: number;
     'raster-color'?: unknown[];
-    'raster-color-range'?: [number, number];
+    'raster-resampling'?: 'linear' | 'nearest';
   };
 }
 

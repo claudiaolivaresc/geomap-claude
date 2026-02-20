@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import type { Map as MapboxMap } from 'mapbox-gl';
 import type { ActiveLayer, LayerConfig } from '@/types';
 import { getLayerById } from '@/config';
+import { COLOR_RAMPS } from '@/config/layers.config';
+import { useConfigStore } from './configStore';
 
 interface LayerState {
   activeLayers: Map<string, ActiveLayer>;
@@ -120,22 +122,46 @@ export const useLayerStore = create<LayerStore>()(
           map.removeSource(sourceId);
         }
 
+        // Get admin overrides from config store
+        const adminOverride = useConfigStore.getState().getOverride(layerConfig.id);
+        const styleOv = adminOverride?.style_overrides || {};
+
         // Add source
         if (layerConfig.type === 'raster') {
           map.addSource(sourceId, {
             type: 'raster',
             tiles: layerConfig.source.tiles,
             tileSize: layerConfig.source.tileSize || 256,
+            ...(layerConfig.source.minzoom != null && { minzoom: layerConfig.source.minzoom }),
+            ...(layerConfig.source.maxzoom != null && { maxzoom: layerConfig.source.maxzoom }),
           });
+
+          // Build raster paint from config style (raster-color + resampling from test-tileserver)
+          const rasterStyle = layerConfig.style as {
+            paint: Record<string, unknown>;
+          };
+          const rasterPaint: Record<string, unknown> = {
+            'raster-opacity': (styleOv['raster-opacity'] as number) ?? layerConfig.defaultOpacity ?? 0.8,
+          };
+
+          // Resolve color ramp: admin override key → COLOR_RAMPS lookup, else default
+          const rampKey = styleOv['color_ramp'] as string;
+          if (rampKey && COLOR_RAMPS[rampKey]) {
+            rasterPaint['raster-color'] = COLOR_RAMPS[rampKey];
+          } else if (rasterStyle.paint?.['raster-color']) {
+            rasterPaint['raster-color'] = rasterStyle.paint['raster-color'];
+          }
+
+          rasterPaint['raster-resampling'] =
+            (styleOv['raster-resampling'] as string) ??
+            rasterStyle.paint?.['raster-resampling'] ??
+            'nearest';
 
           map.addLayer({
             id: layerId,
             type: 'raster',
             source: sourceId,
-            paint: {
-              'raster-opacity': layerConfig.defaultOpacity ?? 0.8,
-              ...(layerConfig.style as { paint: Record<string, unknown> }).paint,
-            },
+            paint: rasterPaint,
           });
         } else {
           const vectorStyle = layerConfig.style as {
@@ -149,12 +175,20 @@ export const useLayerStore = create<LayerStore>()(
             tiles: layerConfig.source.tiles,
           });
 
+          // Merge admin style overrides into vector paint
+          const mergedPaint = { ...vectorStyle.paint };
+          for (const [key, val] of Object.entries(styleOv)) {
+            if (val !== undefined && val !== null && val !== '') {
+              mergedPaint[key] = val;
+            }
+          }
+
           map.addLayer({
             id: layerId,
             type: vectorStyle.type as 'circle' | 'line' | 'fill',
             source: sourceId,
             'source-layer': vectorStyle.sourceLayer || `${layerConfig.schema}.${layerConfig.table}`,
-            paint: vectorStyle.paint as Record<string, unknown>,
+            paint: mergedPaint,
           });
         }
       },

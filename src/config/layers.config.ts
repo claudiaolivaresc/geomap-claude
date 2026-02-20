@@ -2,7 +2,7 @@ import type { LayerGroup, LayerConfig } from '@/types';
 import { TILESERVER_URLS } from './map.config';
 
 // Color ramps for raster layers (normalized 0-1 values)
-const COLOR_RAMPS = {
+export const COLOR_RAMPS: Record<string, unknown[]> = {
   thermal: [
     'step', ['raster-value'],
     '#313695',
@@ -59,7 +59,7 @@ const COLOR_RAMPS = {
 };
 
 // Gradient strings for legend display
-const GRADIENTS = {
+export const GRADIENTS: Record<string, string> = {
   thermal: 'linear-gradient(to right, #313695, #4575b4, #74add1, #abd9e9, #e0f3f8, #ffffbf, #fee090, #fdae61, #f46d43, #d73027, #a50026)',
   lab: 'linear-gradient(to right, #e9dde0, #e9c7cf, #e9a6a9, #e97775, #eba983, #ede594, #bff05e, #17dac3, #12cee8, #71c4eb, #3b6fd0, #242cb6)',
   moho: 'linear-gradient(to right, #ffffcc, #ffeda0, #fed976, #feb24c, #fd8d3c, #fc4e2a, #e31a1c, #bd0026, #800026)',
@@ -88,16 +88,16 @@ export const LAYER_GROUPS: LayerGroup[] = [
           type: 'circle',
           sourceLayer: 'surface.gl_gem_geothermal_plant_tracker_52024',
           paint: {
-            'circle-radius': 6,
-            'circle-color': '#10b981',
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff',
-            'circle-opacity': 0.9,
+            'circle-radius': 5,
+            'circle-color': '#00FF00',
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#FFFFFF',
+            'circle-opacity': 0.8,
           },
         },
         legend: {
           type: 'symbol',
-          items: [{ color: '#10b981', label: 'Geothermal Plant' }],
+          items: [{ color: '#00FF00', label: 'Geothermal Plant' }],
         },
         metadata: {
           description: 'Operating and planned geothermal power plants worldwide.',
@@ -125,16 +125,16 @@ export const LAYER_GROUPS: LayerGroup[] = [
           type: 'circle',
           sourceLayer: 'surface.gl_borehole_clipped',
           paint: {
-            'circle-radius': 4,
-            'circle-color': '#3b82f6',
+            'circle-radius': 3,
+            'circle-color': '#0000FF',
             'circle-stroke-width': 1,
-            'circle-stroke-color': '#ffffff',
-            'circle-opacity': 0.7,
+            'circle-stroke-color': '#FFFFFF',
+            'circle-opacity': 0.6,
           },
         },
         legend: {
           type: 'symbol',
-          items: [{ color: '#3b82f6', label: 'Borehole' }],
+          items: [{ color: '#0000FF', label: 'Borehole' }],
         },
         metadata: {
           description: 'Borehole locations providing subsurface temperature and geological data.',
@@ -173,12 +173,14 @@ export const LAYER_GROUPS: LayerGroup[] = [
               type: 'raster',
               tiles: [`${TILESERVER_URLS.raster}/tiles/subsurface.gl_gtg_clipped/{z}/{x}/{y}.png`],
               tileSize: 256,
+              minzoom: 3,
+              maxzoom: 7,
             },
             style: {
               paint: {
                 'raster-opacity': 0.8,
                 'raster-color': COLOR_RAMPS.thermal,
-                'raster-color-range': [0, 100],
+                'raster-resampling': 'nearest',
               },
             },
             legend: {
@@ -209,12 +211,14 @@ export const LAYER_GROUPS: LayerGroup[] = [
               type: 'raster',
               tiles: [`${TILESERVER_URLS.raster}/tiles/subsurface.gl_shf_clipped/{z}/{x}/{y}.png`],
               tileSize: 256,
+              minzoom: 3,
+              maxzoom: 7,
             },
             style: {
               paint: {
                 'raster-opacity': 0.8,
                 'raster-color': COLOR_RAMPS.thermal,
-                'raster-color-range': [0, 150],
+                'raster-resampling': 'nearest',
               },
             },
             legend: {
@@ -254,12 +258,14 @@ export const LAYER_GROUPS: LayerGroup[] = [
               type: 'raster',
               tiles: [`${TILESERVER_URLS.raster}/tiles/subsurface.gl_lab/{z}/{x}/{y}.png`],
               tileSize: 256,
+              minzoom: 3,
+              maxzoom: 7,
             },
             style: {
               paint: {
                 'raster-opacity': 0.8,
                 'raster-color': COLOR_RAMPS.lab,
-                'raster-color-range': [60, 280],
+                'raster-resampling': 'nearest',
               },
             },
             legend: {
@@ -290,12 +296,14 @@ export const LAYER_GROUPS: LayerGroup[] = [
               type: 'raster',
               tiles: [`${TILESERVER_URLS.raster}/tiles/subsurface.gl_depth_to_moho_stephenson/{z}/{x}/{y}.png`],
               tileSize: 256,
+              minzoom: 3,
+              maxzoom: 7,
             },
             style: {
               paint: {
                 'raster-opacity': 0.8,
                 'raster-color': COLOR_RAMPS.moho,
-                'raster-color-range': [0, 80],
+                'raster-resampling': 'nearest',
               },
             },
             legend: {
@@ -326,12 +334,14 @@ export const LAYER_GROUPS: LayerGroup[] = [
               type: 'raster',
               tiles: [`${TILESERVER_URLS.raster}/tiles/subsurface.gl_vs_110/{z}/{x}/{y}.png`],
               tileSize: 256,
+              minzoom: 3,
+              maxzoom: 7,
             },
             style: {
               paint: {
                 'raster-opacity': 0.8,
                 'raster-color': COLOR_RAMPS.velocity,
-                'raster-color-range': [4.0, 5.0],
+                'raster-resampling': 'nearest',
               },
             },
             legend: {
@@ -377,14 +387,14 @@ export const LAYER_GROUPS: LayerGroup[] = [
           type: 'line',
           sourceLayer: 'subsurface.gl_plate_boundaries',
           paint: {
-            'line-color': '#dc2626',
+            'line-color': 'rgb(195, 19, 19)',
             'line-width': 2,
             'line-opacity': 1,
           },
         },
         legend: {
           type: 'symbol',
-          items: [{ color: '#dc2626', label: 'Plate Boundary' }],
+          items: [{ color: 'rgb(195, 19, 19)', label: 'Plate Boundary' }],
         },
         metadata: {
           description: 'Tectonic plate boundaries are zones of intense geological activity where plates interact.',
@@ -411,14 +421,14 @@ export const LAYER_GROUPS: LayerGroup[] = [
           type: 'line',
           sourceLayer: 'subsurface.gl_woa_active_faults',
           paint: {
-            'line-color': '#f97316',
+            'line-color': 'rgb(255, 140, 0)',
             'line-width': 1.5,
-            'line-opacity': 0.8,
+            'line-opacity': 1,
           },
         },
         legend: {
           type: 'symbol',
-          items: [{ color: '#f97316', label: 'Active Fault' }],
+          items: [{ color: 'rgb(255, 140, 0)', label: 'Active Fault' }],
         },
         metadata: {
           description: 'Active faults can serve as pathways for geothermal fluids and enhance heat transfer within the crust.',
@@ -446,15 +456,15 @@ export const LAYER_GROUPS: LayerGroup[] = [
           sourceLayer: 'subsurface.gl_heatflow',
           paint: {
             'circle-radius': 4,
-            'circle-color': '#ef4444',
+            'circle-color': '#FF0000',
             'circle-stroke-width': 1,
-            'circle-stroke-color': '#ffffff',
+            'circle-stroke-color': '#FFFFFF',
             'circle-opacity': 0.7,
           },
         },
         legend: {
           type: 'symbol',
-          items: [{ color: '#ef4444', label: 'Heat Flow Point' }],
+          items: [{ color: '#FF0000', label: 'Heat Flow Point' }],
         },
         metadata: {
           description: 'Direct measurements of heat flow from boreholes and other sources.',

@@ -3,7 +3,6 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUIStore, useLayerStore, useMapStore } from '@/stores';
 import { getLayerById } from '@/config';
 import { cn } from '@/lib/utils';
@@ -53,9 +52,8 @@ export function Legend() {
 
       {/* Content */}
       {legendOpen && (
-        <ScrollArea className="max-h-[300px]">
-          <div className="p-3 pt-0 space-y-3">
-            {activeLayersList.map(({ id, state, config }) => (
+        <div className="p-3 pt-0 space-y-3">
+          {activeLayersList.map(({ id, state, config }) => (
               <div
                 key={id}
                 className="p-3 bg-white rounded-lg border border-gray-200"
@@ -121,8 +119,7 @@ export function Legend() {
                 </div>
               </div>
             ))}
-          </div>
-        </ScrollArea>
+        </div>
       )}
     </div>
   );

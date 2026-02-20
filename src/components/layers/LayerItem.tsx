@@ -61,8 +61,8 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-2 p-2 rounded-lg border bg-white transition-colors',
-        canAccess ? 'hover:bg-gray-50' : 'opacity-60 cursor-not-allowed',
+        'flex items-center gap-2 p-2 rounded-lg border border-[#b4ccc5]/50 bg-white transition-colors',
+        canAccess ? 'hover:bg-[#f6fbf8]' : 'opacity-60 cursor-not-allowed',
         depth > 0 && 'ml-3'
       )}
     >
@@ -71,11 +71,11 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
         <Checkbox
           checked={isActive}
           onCheckedChange={handleToggle}
-          className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+          className="data-[state=checked]:bg-[#ffa925] data-[state=checked]:border-[#ffa925]"
         />
       ) : (
         <div className="w-4 h-4 flex items-center justify-center">
-          <Lock className="h-3.5 w-3.5 text-gray-400" />
+          <Lock className="h-3.5 w-3.5 text-[#8b94a7]" />
         </div>
       )}
 
@@ -97,13 +97,13 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
       {/* Layer info */}
       <div className="flex-1 min-w-0" onClick={canAccess ? handleToggle : undefined}>
         <p className={cn(
-          'text-sm font-medium truncate',
-          canAccess ? 'text-gray-900' : 'text-gray-500'
+          'text-sm font-medium break-words',
+          canAccess ? 'text-[#141d2d]' : 'text-[#8b94a7]'
         )}>
           {layer.title}
         </p>
         {layer.legend?.type === 'gradient' && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#819a93]">
             {layer.legend.min} - {layer.legend.max} {layer.legend.unit}
           </p>
         )}
@@ -111,7 +111,7 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
 
       {/* Premium badge */}
       {isPremium && !canAccess && (
-        <span className="px-2 py-0.5 text-xs font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full">
+        <span className="px-2 py-0.5 text-xs font-medium text-white rounded-full" style={{ backgroundColor: '#e14716' }}>
           PRO
         </span>
       )}
@@ -123,7 +123,7 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
         className="h-7 w-7 flex-shrink-0"
         onClick={handleInfoClick}
       >
-        <Info className="h-4 w-4 text-gray-400" />
+        <Info className="h-4 w-4 text-[#819a93]" />
       </Button>
     </div>
   );

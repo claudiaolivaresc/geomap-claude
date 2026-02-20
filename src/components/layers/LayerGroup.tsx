@@ -11,12 +11,13 @@ interface LayerGroupProps {
   depth: number;
 }
 
-const GROUP_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  surface: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800' },
-  subsurface: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800' },
-  structural: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800' },
-  'thermal-model': { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800' },
-  'heat-source-proximity': { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800' },
+// Accent colors per group, styled to fit the navy/sage/orange theme
+const GROUP_COLORS: Record<string, { bg: string; border: string; text: string; accent: string }> = {
+  surface:                 { bg: 'bg-[#eef6f3]', border: 'border-[#b4ccc5]', text: 'text-[#141d2d]', accent: 'bg-[#b4ccc5]' },
+  subsurface:              { bg: 'bg-[#fff8ee]', border: 'border-[#ffa925]/40', text: 'text-[#141d2d]', accent: 'bg-[#ffa925]/20' },
+  structural:              { bg: 'bg-[#fef2ee]', border: 'border-[#e14716]/30', text: 'text-[#141d2d]', accent: 'bg-[#e14716]/15' },
+  'thermal-model':         { bg: 'bg-[#fff5ee]', border: 'border-[#ffa925]/30', text: 'text-[#141d2d]', accent: 'bg-[#ffa925]/15' },
+  'heat-source-proximity': { bg: 'bg-[#f3eef8]', border: 'border-[#8b5cf6]/30', text: 'text-[#141d2d]', accent: 'bg-[#8b5cf6]/15' },
 };
 
 export function LayerGroup({ group, depth }: LayerGroupProps) {
@@ -24,9 +25,10 @@ export function LayerGroup({ group, depth }: LayerGroupProps) {
   const isExpanded = expandedGroups.has(group.id);
 
   const colors = GROUP_COLORS[group.id] || {
-    bg: 'bg-gray-50',
-    border: 'border-gray-200',
-    text: 'text-gray-800',
+    bg: 'bg-[#f6fbf8]',
+    border: 'border-[#b4ccc5]',
+    text: 'text-[#141d2d]',
+    accent: 'bg-[#b4ccc5]/20',
   };
 
   const layerCount = countLayers(group);
@@ -67,7 +69,7 @@ export function LayerGroup({ group, depth }: LayerGroupProps) {
         <span
           className={cn(
             'text-xs px-2 py-0.5 rounded-full',
-            colors.bg,
+            colors.accent,
             colors.text,
             'opacity-70'
           )}
