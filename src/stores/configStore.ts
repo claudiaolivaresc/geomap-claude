@@ -4,6 +4,14 @@ interface AdminOverrideEntry {
   style_overrides: Record<string, unknown>;
   visible_fields: string[];
   metadata_overrides: { title?: string; description?: string; citation?: string };
+  published: boolean;
+  is_dynamic?: boolean;
+  layer_type?: string;
+  schema_name?: string;
+  table_name?: string;
+  vector_style_type?: string;
+  group_id?: string;
+  source_config?: Record<string, unknown>;
 }
 
 interface ConfigState {
@@ -14,6 +22,7 @@ interface ConfigState {
 interface ConfigActions {
   fetchOverrides: () => Promise<void>;
   getOverride: (layerId: string) => AdminOverrideEntry | undefined;
+  isLayerPublished: (layerId: string) => boolean;
 }
 
 export const useConfigStore = create<ConfigState & ConfigActions>()((set, get) => ({
@@ -39,4 +48,9 @@ export const useConfigStore = create<ConfigState & ConfigActions>()((set, get) =
   },
 
   getOverride: (layerId) => get().overrides.get(layerId),
+
+  isLayerPublished: (layerId) => {
+    const override = get().overrides.get(layerId);
+    return override?.published !== false;
+  },
 }));

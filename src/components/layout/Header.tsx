@@ -13,6 +13,7 @@ import {
 import { useUIStore, useAuthStore } from '@/stores';
 import type { PermissionLevel } from '@/types';
 import { PERMISSION_LABELS } from '@/config';
+import { SearchDropdown } from './SearchDropdown';
 
 const DEV_ROLES: PermissionLevel[] = ['public', 'free', 'premium', 'enterprise', 'admin'];
 
@@ -58,7 +59,7 @@ export function Header() {
       {/* Search bar */}
       <div className="flex-1 max-w-md mx-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#819a93]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#819a93] z-10" />
           <Input
             type="search"
             placeholder="Search layers, locations..."
@@ -66,6 +67,7 @@ export function Header() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-white/10 border border-[#b4ccc5]/30 text-white placeholder:text-[#819a93] focus-visible:ring-2 focus-visible:ring-[#ffa925]/50"
           />
+          <SearchDropdown />
         </div>
       </div>
 

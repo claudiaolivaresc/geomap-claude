@@ -8,20 +8,32 @@ export async function GET(
 ) {
   const { table } = await params;
 
-  // Validate table against known layers
+  const pool = getPool();
+  if (!pool) {
+    return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+  }
+
+  // Validate table against known layers + dynamic layers
   const allowed = new Set(
     getAllLayers()
       .filter((l) => l.schema && l.table)
       .map((l) => `${l.schema}.${l.table}`)
   );
 
-  if (!allowed.has(table)) {
-    return NextResponse.json({ error: `Unknown table: ${table}` }, { status: 400 });
+  // Also allow dynamic layer tables from the admin config
+  try {
+    const dynResult = await pool.query(
+      `SELECT schema_name, table_name FROM public.layer_admin_config WHERE is_dynamic = TRUE AND schema_name IS NOT NULL AND table_name IS NOT NULL`
+    );
+    for (const row of dynResult.rows) {
+      allowed.add(`${row.schema_name}.${row.table_name}`);
+    }
+  } catch {
+    // DB not available, continue with static only
   }
 
-  const pool = getPool();
-  if (!pool) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+  if (!allowed.has(table)) {
+    return NextResponse.json({ error: `Unknown table: ${table}` }, { status: 400 });
   }
 
   const [schema, tableName] = table.split('.');

@@ -6,6 +6,7 @@ import { StyleTab } from './StyleTab';
 import { FieldsTab } from './FieldsTab';
 import { InfoTab } from './InfoTab';
 import { SaveButton } from './SaveButton';
+import { PublishToggle } from './PublishToggle';
 import type { AdminLayerView } from '@/types/admin.types';
 
 interface AdminTabsProps {
@@ -20,6 +21,7 @@ export function AdminTabs({ layer }: AdminTabsProps) {
     description?: string;
     citation?: string;
   }>(layer.metadata);
+  const [published, setPublished] = useState<boolean>(layer.published);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -32,8 +34,9 @@ export function AdminTabs({ layer }: AdminTabsProps) {
       description: layer.metadata.description !== layer.defaults.metadata.description ? layer.metadata.description : undefined,
       citation: layer.metadata.citation !== layer.defaults.metadata.citation ? layer.metadata.citation : undefined,
     });
+    setPublished(layer.published);
     setSaveStatus('idle');
-  }, [layer.id, layer.style_overrides, layer.visible_fields, layer.metadata, layer.defaults.metadata]);
+  }, [layer.id, layer.style_overrides, layer.visible_fields, layer.metadata, layer.defaults.metadata, layer.published]);
 
   const handleSave = useCallback(async () => {
     setSaveStatus('saving');
@@ -47,6 +50,7 @@ export function AdminTabs({ layer }: AdminTabsProps) {
           style_overrides: styleOverrides,
           visible_fields: visibleFields,
           metadata_overrides: metadataOverrides,
+          published,
         }),
       });
 
@@ -62,7 +66,7 @@ export function AdminTabs({ layer }: AdminTabsProps) {
       setErrorMessage('Network error');
       setSaveStatus('error');
     }
-  }, [layer.id, styleOverrides, visibleFields, metadataOverrides]);
+  }, [layer.id, styleOverrides, visibleFields, metadataOverrides, published]);
 
   return (
     <div className="space-y-6">
@@ -80,7 +84,10 @@ export function AdminTabs({ layer }: AdminTabsProps) {
             {layer.type} {layer.vectorStyleType ? `(${layer.vectorStyleType})` : ''}
           </span>
         </div>
-        <span className="text-xs text-gray-400 ml-auto">{layer.group}</span>
+        <div className="ml-auto flex items-center gap-2">
+          <PublishToggle published={published} onChange={setPublished} />
+          <span className="text-xs text-gray-400">{layer.group}</span>
+        </div>
       </div>
 
       <Tabs defaultValue="style">

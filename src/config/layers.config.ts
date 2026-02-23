@@ -1415,6 +1415,28 @@ export const LAYER_GROUPS: LayerGroup[] = [
   },
 ];
 
+// Build CSS linear-gradient from color stops
+export function colorStopsToGradient(stops: { position: number; color: string }[]): string {
+  if (stops.length === 0) return 'linear-gradient(to right, #ccc, #ccc)';
+  const sorted = [...stops].sort((a, b) => a.position - b.position);
+  const parts = sorted.map((s) => `${s.color} ${(s.position * 100).toFixed(1)}%`);
+  return `linear-gradient(to right, ${parts.join(', ')})`;
+}
+
+// Flatten group tree into id/title pairs for group selector
+export function getAllGroupIds(): { id: string; title: string; path: string }[] {
+  const result: { id: string; title: string; path: string }[] = [];
+  function walk(groups: LayerGroup[], parentPath = '') {
+    for (const g of groups) {
+      const path = parentPath ? `${parentPath} > ${g.title}` : g.title;
+      result.push({ id: g.id, title: g.title, path });
+      if (g.children) walk(g.children, path);
+    }
+  }
+  walk(LAYER_GROUPS);
+  return result;
+}
+
 // Helper function to flatten all layers for easy lookup
 export function getAllLayers(): LayerConfig[] {
   const layers: LayerConfig[] = [];

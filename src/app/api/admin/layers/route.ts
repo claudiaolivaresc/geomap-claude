@@ -21,7 +21,7 @@ export async function GET() {
   const pool = getPool();
 
   // Fetch admin overrides from DB
-  const overridesMap = new Map<string, { style_overrides: Record<string, unknown>; visible_fields: string[]; metadata_overrides: Record<string, string> }>();
+  const overridesMap = new Map<string, { style_overrides: Record<string, unknown>; visible_fields: string[]; metadata_overrides: Record<string, string>; published: boolean }>();
   if (pool) {
     try {
       const result = await pool.query('SELECT * FROM public.layer_admin_config');
@@ -30,6 +30,7 @@ export async function GET() {
           style_overrides: row.style_overrides || {},
           visible_fields: row.visible_fields || [],
           metadata_overrides: row.metadata_overrides || {},
+          published: row.published !== false,
         });
       }
     } catch {
@@ -58,6 +59,7 @@ export async function GET() {
       defaultOpacity: layer.defaultOpacity ?? 1,
       style_overrides: override?.style_overrides || {},
       visible_fields: override?.visible_fields || [],
+      published: override?.published !== false,
       metadata: {
         title: override?.metadata_overrides?.title || layer.title,
         description: override?.metadata_overrides?.description || layer.metadata.description,

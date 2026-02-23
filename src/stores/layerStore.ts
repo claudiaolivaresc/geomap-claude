@@ -111,6 +111,11 @@ export const useLayerStore = create<LayerStore>()(
       },
 
       addLayerToMap: (map, layerConfig) => {
+        // Guard: skip unpublished layers
+        if (!useConfigStore.getState().isLayerPublished(layerConfig.id)) {
+          return;
+        }
+
         const sourceId = `source-${layerConfig.id}`;
         const layerId = `layer-${layerConfig.id}`;
 

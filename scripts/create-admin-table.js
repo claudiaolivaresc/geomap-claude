@@ -17,7 +17,21 @@ async function main() {
         updated_by TEXT
       )
     `);
-    console.log('Table layer_admin_config created successfully');
+    console.log('Table layer_admin_config created/verified');
+
+    // Phase 1: Published toggle
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS published BOOLEAN DEFAULT TRUE`);
+
+    // Phase 3: Dynamic layer support
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS is_dynamic BOOLEAN DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS layer_type TEXT`);
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS schema_name TEXT`);
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS table_name TEXT`);
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS vector_style_type TEXT`);
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS group_id TEXT`);
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS source_config JSONB DEFAULT '{}'::jsonb`);
+
+    console.log('All columns added successfully');
   } catch (e) {
     console.error('Error:', e.message);
   } finally {

@@ -9,15 +9,37 @@ export async function GET() {
 
   try {
     const result = await pool.query(
-      'SELECT layer_id, style_overrides, visible_fields, metadata_overrides FROM public.layer_admin_config'
+      `SELECT layer_id, style_overrides, visible_fields, metadata_overrides, published,
+              is_dynamic, layer_type, schema_name, table_name, vector_style_type, group_id, source_config
+       FROM public.layer_admin_config`
     );
 
-    const overrides: Record<string, { style_overrides: Record<string, unknown>; visible_fields: string[]; metadata_overrides: Record<string, string> }> = {};
+    const overrides: Record<string, {
+      style_overrides: Record<string, unknown>;
+      visible_fields: string[];
+      metadata_overrides: Record<string, string>;
+      published: boolean;
+      is_dynamic?: boolean;
+      layer_type?: string;
+      schema_name?: string;
+      table_name?: string;
+      vector_style_type?: string;
+      group_id?: string;
+      source_config?: Record<string, unknown>;
+    }> = {};
     for (const row of result.rows) {
       overrides[row.layer_id] = {
         style_overrides: row.style_overrides || {},
         visible_fields: row.visible_fields || [],
         metadata_overrides: row.metadata_overrides || {},
+        published: row.published !== false,
+        is_dynamic: row.is_dynamic || false,
+        layer_type: row.layer_type || undefined,
+        schema_name: row.schema_name || undefined,
+        table_name: row.table_name || undefined,
+        vector_style_type: row.vector_style_type || undefined,
+        group_id: row.group_id || undefined,
+        source_config: row.source_config || undefined,
       };
     }
 

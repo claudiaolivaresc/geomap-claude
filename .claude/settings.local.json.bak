@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(node scripts/create-admin-table.js:*)"
+    ]
+  }
+}
