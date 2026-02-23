@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Header, Sidebar } from '@/components/layout';
-import { MapCanvas, MapControls } from '@/components/map';
+import { MapCanvas, MapControls, MeasureTool } from '@/components/map';
 import { LayerInfoModal } from '@/components/layers';
 import { useUIStore, useConfigStore } from '@/stores';
 
@@ -45,6 +45,7 @@ export default function Home() {
         <main className="flex-1 relative">
           <MapCanvas />
           <MapControls />
+          <MeasureTool />
 
           {/* Bottom-right logo watermark */}
           <div className="absolute bottom-4 right-4 z-10">

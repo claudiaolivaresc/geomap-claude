@@ -3,8 +3,9 @@
 import { useRef, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useMapStore, useLayerStore, useConfigStore } from '@/stores';
-import { MAP_CONFIG, MAPBOX_ACCESS_TOKEN, getAllLayers } from '@/config';
+import { useMapStore, useLayerStore, useConfigStore, useUploadStore, useMeasureStore } from '@/stores';
+import { MAP_CONFIG, MAPBOX_ACCESS_TOKEN, getAllLayers, VECTOR_LAYER_INFO } from '@/config';
+import type { TooltipField } from '@/config/vectorLayerInfo';
 import { queryRasterValues } from '@/lib/rasterQuery';
 
 // Set Mapbox access token and limit parallel tile requests (tileserver is sensitive to concurrency)
@@ -81,6 +82,9 @@ export function MapCanvas() {
     const popup = new mapboxgl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '320px' });
 
     map.on('click', async (e) => {
+      // Skip feature queries when measurement tool is active
+      if (useMeasureStore.getState().mode) return;
+
       const { activeLayers: layers } = useLayerStore.getState();
       const allConfigs = getAllLayers();
       const htmlParts: string[] = [];
@@ -91,7 +95,13 @@ export function MapCanvas() {
         .map((cfg) => `layer-${cfg.id}`);
 
       if (visibleVectorIds.length > 0) {
-        const features = map.queryRenderedFeatures(e.point, { layers: visibleVectorIds });
+        // Use a small bounding box around the click point for better hit detection on lines
+        const px = 10;
+        const bbox: [mapboxgl.PointLike, mapboxgl.PointLike] = [
+          [e.point.x - px, e.point.y - px],
+          [e.point.x + px, e.point.y + px],
+        ];
+        const features = map.queryRenderedFeatures(bbox, { layers: visibleVectorIds });
         const configState = useConfigStore.getState();
 
         for (const feat of features) {
@@ -101,13 +111,116 @@ export function MapCanvas() {
           const title = cfg?.title || layerId;
           const props = feat.properties || {};
 
-          // Filter fields: use admin-configured visible_fields if set
-          const override = configState.getOverride(layerId);
-          const allowedFields = override?.visible_fields?.length ? override.visible_fields : null;
+          const tooltipConfig = VECTOR_LAYER_INFO[layerId];
 
+          let rows: string;
+
+          // Helper: render all properties as a generic table
+          const renderAllProps = () => {
+            const override = configState.getOverride(layerId);
+            const allowedFields = override?.visible_fields?.length ? override.visible_fields : null;
+            return Object.entries(props)
+              .filter(([k]) => !k.startsWith('_') && k !== 'geom' && k !== 'gid')
+              .filter(([k]) => !allowedFields || allowedFields.includes(k))
+              .map(
+                ([k, v]) =>
+                  `<tr><td style="padding:2px 8px 2px 0;font-size:11px;color:#888;white-space:nowrap;">${k}</td>` +
+                  `<td style="padding:2px 0;font-size:12px;color:#141d2d;font-weight:500;">${v ?? '—'}</td></tr>`
+              )
+              .join('');
+          };
+
+          if (tooltipConfig) {
+            // Use curated tooltip fields
+            rows = tooltipConfig.tooltip_fields
+              .map((field: TooltipField) => {
+                // Resolve value: support array of field names (first defined wins)
+                const names = Array.isArray(field.name) ? field.name : [field.name];
+                let raw: unknown = undefined;
+                for (const n of names) {
+                  if (props[n] != null && props[n] !== '') { raw = props[n]; break; }
+                }
+                if (raw == null) return '';
+
+                // Format numeric values
+                let display = String(raw);
+                if (field.toFixedVal != null && typeof raw === 'number') {
+                  display = raw.toFixed(field.toFixedVal);
+                } else if (field.toFixedVal != null && !isNaN(Number(raw))) {
+                  display = Number(raw).toFixed(field.toFixedVal);
+                }
+
+                const label = field.prefix_str || '';
+                const units = field.units ? ` ${field.units}` : '';
+
+                if (label) {
+                  return (
+                    `<tr><td style="padding:2px 8px 2px 0;font-size:11px;color:#888;white-space:nowrap;">${label}</td>` +
+                    `<td style="padding:2px 0;font-size:12px;color:#141d2d;font-weight:500;">${display}${units}</td></tr>`
+                  );
+                }
+                // No prefix — show as a header-style value
+                return (
+                  `<tr><td colspan="2" style="padding:2px 0;font-size:13px;color:#141d2d;font-weight:600;">${display}${units}</td></tr>`
+                );
+              })
+              .filter(Boolean)
+              .join('');
+
+            // If curated fields produced nothing, fall back to all properties
+            if (!rows) {
+              rows = renderAllProps();
+            }
+          } else {
+            rows = renderAllProps();
+          }
+
+          if (rows) {
+            htmlParts.push(
+              `<div style="padding:6px 0;border-bottom:1px solid #eee;">` +
+              `<div style="font-size:11px;font-weight:600;color:#ffa925;margin-bottom:4px;">${title}</div>` +
+              `<table style="border-collapse:collapse;">${rows}</table></div>`
+            );
+          }
+        }
+      }
+
+      // ── Uploaded GeoPackage layers ──
+      const { uploadedLayers } = useUploadStore.getState();
+      const uploadLayerIds = uploadedLayers
+        .filter((ul) => ul.visible)
+        .flatMap((ul) => {
+          const ids: string[] = [];
+          for (const suffix of ['-fill', '-outline', '-line', '-circle']) {
+            const mlid = `layer-${ul.id}${suffix}`;
+            if (map.getLayer(mlid)) ids.push(mlid);
+          }
+          return ids;
+        });
+
+      if (uploadLayerIds.length > 0) {
+        const px = 10;
+        const bbox: [mapboxgl.PointLike, mapboxgl.PointLike] = [
+          [e.point.x - px, e.point.y - px],
+          [e.point.x + px, e.point.y + px],
+        ];
+        const uploadFeats = map.queryRenderedFeatures(bbox, { layers: uploadLayerIds });
+
+        // De-duplicate: only show one popup entry per unique upload layer
+        const seenUploads = new Set<string>();
+        for (const feat of uploadFeats) {
+          if (!feat.layer) continue;
+          // Extract upload id from layer id like "layer-upload-123-tableName-fill"
+          const fullId = feat.layer.id.replace('layer-', '');
+          const uploadId = fullId.replace(/-(fill|outline|line|circle)$/, '');
+          if (seenUploads.has(uploadId)) continue;
+          seenUploads.add(uploadId);
+
+          const ul = uploadedLayers.find((u) => u.id === uploadId);
+          const title = ul ? `${ul.tableName} (uploaded)` : uploadId;
+          const props = feat.properties || {};
           const rows = Object.entries(props)
-            .filter(([k]) => !k.startsWith('_') && k !== 'geom' && k !== 'gid')
-            .filter(([k]) => !allowedFields || allowedFields.includes(k))
+            .filter(([k]) => !k.startsWith('_'))
             .map(
               ([k, v]) =>
                 `<tr><td style="padding:2px 8px 2px 0;font-size:11px;color:#888;white-space:nowrap;">${k}</td>` +
@@ -118,7 +231,7 @@ export function MapCanvas() {
           if (rows) {
             htmlParts.push(
               `<div style="padding:6px 0;border-bottom:1px solid #eee;">` +
-              `<div style="font-size:11px;font-weight:600;color:#ffa925;margin-bottom:4px;">${title}</div>` +
+              `<div style="font-size:11px;font-weight:600;color:#ff6b35;margin-bottom:4px;">${title}</div>` +
               `<table style="border-collapse:collapse;">${rows}</table></div>`
             );
           }

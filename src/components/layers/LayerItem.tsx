@@ -4,7 +4,7 @@ import { Info, Lock } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useLayerStore, useAuthStore, useUIStore, useMapStore } from '@/stores';
-import type { LayerConfig } from '@/types';
+import type { LayerConfig, VectorStyle } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface LayerItemProps {
@@ -80,15 +80,25 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
       )}
 
       {/* Layer preview (color swatch or gradient) */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 flex items-center">
         {layer.legend?.type === 'gradient' ? (
           <div
             className="w-8 h-5 rounded border border-gray-200"
             style={{ background: layer.legend.gradient }}
           />
+        ) : (layer.style as VectorStyle)?.type === 'line' ? (
+          <div
+            className="w-6 h-[3px] rounded-full"
+            style={{ backgroundColor: previewColor }}
+          />
+        ) : (layer.style as VectorStyle)?.type === 'fill' ? (
+          <div
+            className="w-5 h-5 rounded-sm border border-gray-200"
+            style={{ backgroundColor: previewColor }}
+          />
         ) : (
           <div
-            className="w-5 h-5 rounded border border-gray-200"
+            className="w-5 h-5 rounded-full border border-gray-200"
             style={{ backgroundColor: previewColor }}
           />
         )}

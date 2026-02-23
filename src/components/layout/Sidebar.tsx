@@ -8,6 +8,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useUIStore } from '@/stores';
 import { LayerTree } from '@/components/layers/LayerTree';
 import { Legend } from '@/components/layers/Legend';
+import { GeoPackageUpload } from '@/components/upload/GeoPackageUpload';
 import { cn } from '@/lib/utils';
 
 const MIN_WIDTH = 240;
@@ -61,8 +62,10 @@ export function Sidebar() {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-[#b4ccc5] flex-shrink-0" style={{ backgroundColor: '#141d2d' }}>
         <h2 className="font-semibold text-white">Layers</h2>
-        {!isMobile && (
-          <Button
+        <div className="flex items-center gap-1">
+          <GeoPackageUpload />
+          {!isMobile && (
+            <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-white hover:bg-white/10"
@@ -74,7 +77,8 @@ export function Sidebar() {
               <ChevronLeft className="h-4 w-4" />
             )}
           </Button>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Layer tree */}

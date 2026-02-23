@@ -3,3 +3,5 @@ export { useLayerStore } from './layerStore';
 export { useUIStore } from './uiStore';
 export { useAuthStore } from './authStore';
 export { useConfigStore } from './configStore';
+export { useUploadStore } from './uploadStore';
+export { useMeasureStore } from './measureStore';
