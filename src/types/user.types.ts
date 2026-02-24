@@ -1,11 +1,13 @@
-import type { PermissionLevel } from './layer.types';
+import type { UserRole } from './layer.types';
 
 export interface User {
   id: string;
   email: string;
   displayName?: string;
   photoURL?: string;
-  subscriptionLevel: PermissionLevel;
+  role: UserRole;
+  companyId?: string;
+  companyName?: string;
   createdAt: Date;
 }
 

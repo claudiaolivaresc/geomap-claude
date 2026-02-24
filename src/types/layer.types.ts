@@ -2,7 +2,7 @@ import type { FillPaint, LinePaint, CirclePaint, RasterPaint } from 'mapbox-gl';
 
 export type LayerType = 'raster' | 'vector';
 export type VectorStyleType = 'fill' | 'line' | 'circle' | 'symbol';
-export type PermissionLevel = 'public' | 'free' | 'premium' | 'enterprise' | 'admin';
+export type UserRole = 'public' | 'admin' | 'company';
 
 export interface LayerSource {
   type: 'raster' | 'vector';
@@ -55,8 +55,8 @@ export interface LayerMetadata {
 }
 
 export interface LayerPermissions {
-  requiresAuth: boolean;
-  allowedRoles: PermissionLevel[];
+  visibility: 'public' | 'restricted';
+  allowedCompanies: string[];
 }
 
 export interface LayerConfig {

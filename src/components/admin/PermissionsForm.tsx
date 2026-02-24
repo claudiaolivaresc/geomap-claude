@@ -1,76 +1,95 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import type { LayerPermissions, PermissionLevel } from '@/types';
+import type { LayerPermissions } from '@/types';
+import type { Company } from '@/types/company.types';
 
 interface PermissionsFormProps {
   permissions: LayerPermissions;
   onChange: (permissions: LayerPermissions) => void;
 }
 
-const ROLES: { value: PermissionLevel; label: string; description: string }[] = [
-  { value: 'public', label: 'Public', description: 'No login required' },
-  { value: 'free', label: 'Free', description: 'Free registered users' },
-  { value: 'premium', label: 'Premium', description: 'Premium subscribers' },
-  { value: 'admin', label: 'Admin', description: 'Administrators' },
-];
-
 export function PermissionsForm({ permissions, onChange }: PermissionsFormProps) {
-  const handleAuthChange = (checked: boolean) => {
-    onChange({ ...permissions, requiresAuth: checked });
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/companies')
+      .then((res) => res.json())
+      .then((data) => setCompanies(data.companies || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleVisibilityChange = (restricted: boolean) => {
+    onChange({
+      ...permissions,
+      visibility: restricted ? 'restricted' : 'public',
+      allowedCompanies: restricted ? permissions.allowedCompanies : [],
+    });
   };
 
-  const handleRoleToggle = (role: PermissionLevel, checked: boolean) => {
-    const currentRoles = permissions.allowedRoles || [];
-    const newRoles = checked
-      ? [...currentRoles, role]
-      : currentRoles.filter((r) => r !== role);
-    onChange({ ...permissions, allowedRoles: newRoles });
+  const handleCompanyToggle = (companyId: string, checked: boolean) => {
+    const current = permissions.allowedCompanies || [];
+    const updated = checked
+      ? [...current, companyId]
+      : current.filter((id) => id !== companyId);
+    onChange({ ...permissions, allowedCompanies: updated });
   };
 
   return (
     <div className="space-y-4">
-      {/* Auth requirement */}
+      {/* Visibility toggle */}
       <div className="flex items-center gap-3 p-3 rounded-lg border">
         <Checkbox
-          id="requires-auth"
-          checked={permissions.requiresAuth}
-          onCheckedChange={handleAuthChange}
+          id="restricted"
+          checked={permissions.visibility === 'restricted'}
+          onCheckedChange={handleVisibilityChange}
         />
         <div>
-          <Label htmlFor="requires-auth" className="font-medium cursor-pointer">
-            Requires Authentication
+          <Label htmlFor="restricted" className="font-medium cursor-pointer">
+            Restrict to specific companies
           </Label>
           <p className="text-xs text-gray-500">
-            Users must be logged in to see this layer
+            When enabled, only users from selected companies (and admins) can see this layer
           </p>
         </div>
       </div>
 
-      {/* Role checkboxes */}
-      <div>
-        <Label className="text-sm font-medium text-gray-700 mb-2 block">
-          Allowed Roles
-        </Label>
-        <div className="space-y-2">
-          {ROLES.map((role) => (
-            <div key={role.value} className="flex items-center gap-3 p-2 rounded hover:bg-gray-50">
-              <Checkbox
-                id={`role-${role.value}`}
-                checked={permissions.allowedRoles?.includes(role.value) ?? false}
-                onCheckedChange={(checked) => handleRoleToggle(role.value, checked as boolean)}
-              />
-              <div>
-                <Label htmlFor={`role-${role.value}`} className="cursor-pointer">
-                  {role.label}
-                </Label>
-                <p className="text-xs text-gray-400">{role.description}</p>
-              </div>
+      {/* Company checkboxes (only visible when restricted) */}
+      {permissions.visibility === 'restricted' && (
+        <div>
+          <Label className="text-sm font-medium text-gray-700 mb-2 block">
+            Allowed Companies
+          </Label>
+          {loading ? (
+            <p className="text-sm text-gray-400">Loading companies...</p>
+          ) : companies.length === 0 ? (
+            <p className="text-sm text-gray-400">
+              No companies created yet. Add companies in the Companies tab.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {companies.map((company) => (
+                <div key={company.id} className="flex items-center gap-3 p-2 rounded hover:bg-gray-50">
+                  <Checkbox
+                    id={`company-${company.id}`}
+                    checked={permissions.allowedCompanies?.includes(company.id) ?? false}
+                    onCheckedChange={(checked) =>
+                      handleCompanyToggle(company.id, checked as boolean)
+                    }
+                  />
+                  <Label htmlFor={`company-${company.id}`} className="cursor-pointer">
+                    {company.name}
+                  </Label>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

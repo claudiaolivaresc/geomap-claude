@@ -11,28 +11,46 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useUIStore, useAuthStore } from '@/stores';
-import type { PermissionLevel } from '@/types';
-import { PERMISSION_LABELS } from '@/config';
+import type { UserRole } from '@/types';
+import { ROLE_LABELS } from '@/config';
 import { SearchDropdown } from './SearchDropdown';
 
-const DEV_ROLES: PermissionLevel[] = ['public', 'free', 'premium', 'enterprise', 'admin'];
+interface DevPersona {
+  label: string;
+  user: null | { role: UserRole; companyId?: string; companyName?: string };
+}
+
+const DEV_PERSONAS: DevPersona[] = [
+  { label: 'Public (logged out)', user: null },
+  { label: 'Admin', user: { role: 'admin' } },
+  { label: 'Company A User', user: { role: 'company', companyId: 'company-a', companyName: 'Company A' } },
+  { label: 'Company B User', user: { role: 'company', companyId: 'company-b', companyName: 'Company B' } },
+];
 
 export function Header() {
   const { toggleSidebar, searchQuery, setSearchQuery, isMobile } = useUIStore();
   const { user, isAuthenticated, logout, setUser } = useAuthStore();
 
-  const switchRole = (level: PermissionLevel) => {
-    if (level === 'public') {
+  const switchPersona = (persona: DevPersona) => {
+    if (!persona.user) {
       logout();
     } else {
       setUser({
         id: 'dev-user',
         email: 'dev@test.com',
-        displayName: `Dev (${PERMISSION_LABELS[level]})`,
-        subscriptionLevel: level,
+        displayName: `Dev (${persona.label})`,
+        role: persona.user.role,
+        companyId: persona.user.companyId,
+        companyName: persona.user.companyName,
         createdAt: new Date(),
       });
     }
+  };
+
+  const getUserLabel = () => {
+    if (!user) return 'Public';
+    if (user.role === 'company') return user.companyName || 'Company User';
+    return ROLE_LABELS[user.role];
   };
 
   return (
@@ -84,7 +102,7 @@ export function Header() {
               >
                 <Shield className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">
-                  {user ? PERMISSION_LABELS[user.subscriptionLevel] : 'Public'}
+                  {getUserLabel()}
                 </span>
               </Button>
             </DropdownMenuTrigger>
@@ -93,17 +111,18 @@ export function Header() {
                 Switch Role (Dev)
               </div>
               <DropdownMenuSeparator />
-              {DEV_ROLES.map((role) => (
+              {DEV_PERSONAS.map((persona) => (
                 <DropdownMenuItem
-                  key={role}
-                  onClick={() => switchRole(role)}
+                  key={persona.label}
+                  onClick={() => switchPersona(persona)}
                   className={
-                    (user?.subscriptionLevel === role || (!user && role === 'public'))
+                    (persona.user === null && !user) ||
+                    (persona.user?.role === user?.role && persona.user?.companyId === user?.companyId)
                       ? 'font-semibold bg-accent'
                       : ''
                   }
                 >
-                  {PERMISSION_LABELS[role]}
+                  {persona.label}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -144,13 +163,12 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">
                 <p className="text-sm font-medium">{user.displayName || user.email}</p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {user.subscriptionLevel} Account
+                <p className="text-xs text-muted-foreground">
+                  {user.role === 'company' ? user.companyName : ROLE_LABELS[user.role]}
                 </p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Subscription</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout}>Sign out</DropdownMenuItem>
             </DropdownMenuContent>

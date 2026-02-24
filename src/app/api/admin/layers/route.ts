@@ -56,18 +56,28 @@ export async function GET() {
       ? (layer.style as { paint: Record<string, unknown> }).paint
       : (layer.style as { paint: Record<string, unknown> }).paint;
 
+    // If the layer has a group_id override, use that path instead of the static config path
+    const groupOverrideId = override?.group_id;
+    const group = groupOverrideId
+      ? findGroupPathById(groupOverrideId)
+      : findGroupForLayer(layer.id, LAYER_GROUPS);
+
     return {
       id: layer.id,
       title: override?.metadata_overrides?.title || layer.title,
       type: layer.type,
       schema: layer.schema,
       table: layer.table,
-      group: findGroupForLayer(layer.id, LAYER_GROUPS),
+      group,
       vectorStyleType: vectorStyle?.type as 'circle' | 'line' | 'fill' | undefined,
-      defaultOpacity: layer.defaultOpacity ?? 1,
+      defaultOpacity: override?.default_opacity ?? layer.defaultOpacity ?? 1,
       style_overrides: override?.style_overrides || {},
       visible_fields: override?.visible_fields || [],
       published: override?.published !== false,
+      legend_config: override?.legend_config && Object.keys(override.legend_config).length > 0
+        ? override.legend_config
+        : layer.legend,
+      permissions_config: override?.permissions_config || layer.permissions,
       metadata: {
         title: override?.metadata_overrides?.title || layer.title,
         description: override?.metadata_overrides?.description || layer.metadata.description,

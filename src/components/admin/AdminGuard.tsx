@@ -16,7 +16,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (user.subscriptionLevel !== 'admin') {
+  if (user.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center p-8 bg-white rounded-lg shadow border">

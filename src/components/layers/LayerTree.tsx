@@ -43,6 +43,40 @@ function findGroupById(groups: LayerGroupType[], id: string): LayerGroupType | n
   return null;
 }
 
+/** Relocate static layers that have a group_id override to their new group */
+function relocateStaticLayers(tree: LayerGroupType[], getOverride: (id: string) => { group_id?: string } | undefined): LayerGroupType[] {
+  const toRelocate: { config: LayerConfig; targetGroupId: string }[] = [];
+
+  // Collect layers that need to move and remove them from their current group
+  function scanAndRemove(groups: LayerGroupType[]) {
+    for (const g of groups) {
+      if (g.layers) {
+        g.layers = g.layers.filter((l) => {
+          const override = getOverride(l.id);
+          if (override?.group_id && override.group_id !== g.id) {
+            toRelocate.push({ config: l, targetGroupId: override.group_id });
+            return false;
+          }
+          return true;
+        });
+      }
+      if (g.children) scanAndRemove(g.children);
+    }
+  }
+  scanAndRemove(tree);
+
+  // Place relocated layers in their target groups
+  for (const { config, targetGroupId } of toRelocate) {
+    const target = findGroupById(tree, targetGroupId);
+    if (target) {
+      if (!target.layers) target.layers = [];
+      target.layers.push(config);
+    }
+  }
+
+  return tree;
+}
+
 /** Inject dynamic layers into the appropriate groups in the tree */
 function injectDynamicLayers(tree: LayerGroupType[], dynamicConfigs: LayerConfig[], getOverride: (id: string) => { group_id?: string } | undefined): LayerGroupType[] {
   const orphans: LayerConfig[] = [];
@@ -91,12 +125,19 @@ export function LayerTree() {
     // 1. Filter static layers by published status
     const filtered = filterPublished(LAYER_GROUPS, isLayerPublished);
 
-    // 2. Get published dynamic layers and inject them into the tree
-    const dynamicConfigs = getDynamicLayers();
-    if (dynamicConfigs.length === 0) return filtered;
-
+    // 2. Clone tree so we can mutate it
     const tree = cloneTree(filtered);
-    return injectDynamicLayers(tree, dynamicConfigs, getOverride);
+
+    // 3. Relocate static layers that have a group_id override
+    relocateStaticLayers(tree, getOverride);
+
+    // 4. Get published dynamic layers and inject them into the tree
+    const dynamicConfigs = getDynamicLayers();
+    if (dynamicConfigs.length > 0) {
+      injectDynamicLayers(tree, dynamicConfigs, getOverride);
+    }
+
+    return tree;
   }, [isLoaded, isLayerPublished, getDynamicLayers, getOverride]);
 
   return (

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User, PermissionLevel, LayerPermissions } from '@/types';
-import { canAccess, getMinimumRequiredLevel } from '@/config';
+import type { User, UserRole, LayerPermissions } from '@/types';
+import { canAccessLayer } from '@/config';
 
 interface AuthState {
   user: User | null;
@@ -14,7 +14,7 @@ interface AuthActions {
   setLoading: (isLoading: boolean) => void;
   logout: () => void;
   hasPermission: (permissions: LayerPermissions) => boolean;
-  getUserLevel: () => PermissionLevel;
+  getUserRole: () => UserRole;
 }
 
 type AuthStore = AuthState & AuthActions;
@@ -46,33 +46,38 @@ export const useAuthStore = create<AuthStore>()(
 
       hasPermission: (permissions) => {
         const { user } = get();
-
-        // Public layers are always accessible
-        if (!permissions.requiresAuth) {
-          return true;
-        }
-
-        // If auth required but no user, deny
-        if (!user) {
-          return false;
-        }
-
-        // Check if user's level is in allowed roles
-        const requiredLevel = getMinimumRequiredLevel(permissions.allowedRoles);
-        return canAccess(user.subscriptionLevel, requiredLevel);
+        return canAccessLayer(user, permissions);
       },
 
-      getUserLevel: () => {
+      getUserRole: () => {
         const { user } = get();
-        return user?.subscriptionLevel ?? 'public';
+        return user?.role ?? 'public';
       },
     }),
     {
       name: 'geomap-auth-store',
+      version: 2,
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
+      migrate: (persistedState: unknown, version: number) => {
+        const state = persistedState as Record<string, unknown>;
+        if (version < 2) {
+          const user = state.user as Record<string, unknown> | null;
+          if (user && 'subscriptionLevel' in user) {
+            const oldLevel = user.subscriptionLevel as string;
+            if (oldLevel === 'admin') {
+              user.role = 'admin';
+            } else {
+              state.user = null;
+              state.isAuthenticated = false;
+            }
+            delete user.subscriptionLevel;
+          }
+        }
+        return state;
+      },
     }
   )
 );

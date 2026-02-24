@@ -34,7 +34,7 @@ async function main() {
     // Phase 4: Full dynamic layer support (title, legend, permissions, opacity, ordering)
     await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS title TEXT`);
     await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS legend_config JSONB DEFAULT '{}'::jsonb`);
-    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS permissions_config JSONB DEFAULT '{"requiresAuth":false,"allowedRoles":["public","free","premium","admin"]}'::jsonb`);
+    await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS permissions_config JSONB DEFAULT '{"visibility":"public","allowedCompanies":[]}'::jsonb`);
     await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS default_opacity REAL DEFAULT 1.0`);
     await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0`);
 

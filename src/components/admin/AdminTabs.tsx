@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { StyleTab } from './StyleTab';
 import { FieldsTab } from './FieldsTab';
 import { InfoTab } from './InfoTab';
-import { LegendConfigForm } from './LegendConfigForm';
 import { PermissionsForm } from './PermissionsForm';
 import { SaveButton } from './SaveButton';
 import { PublishToggle } from './PublishToggle';
@@ -20,8 +19,8 @@ interface AdminTabsProps {
 }
 
 const defaultPermissions: LayerPermissions = {
-  requiresAuth: false,
-  allowedRoles: ['public', 'free', 'premium', 'admin'],
+  visibility: 'public',
+  allowedCompanies: [],
 };
 
 export function AdminTabs({ layer }: AdminTabsProps) {
@@ -47,16 +46,13 @@ export function AdminTabs({ layer }: AdminTabsProps) {
   );
   const [defaultOpacity, setDefaultOpacity] = useState(layer.defaultOpacity ?? 1);
 
-  const allGroups = getAllGroupIds();
+  const allGroups = useMemo(() => getAllGroupIds(), []);
 
-  // Extract group_id from the group path for dynamic layers
+  // Extract group_id from the group path on initial load (works for both static and dynamic)
   useEffect(() => {
-    if (layer.is_dynamic) {
-      // Try to match the group path back to a group id
-      const match = allGroups.find((g) => g.path === layer.group || g.id === layer.group);
-      setGroupId(match?.id || '');
-    }
-  }, [layer.group, layer.is_dynamic, allGroups]);
+    const match = allGroups.find((g) => g.path === layer.group || g.id === layer.group);
+    setGroupId(match?.id || '');
+  }, [layer.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset local state when a different layer is selected
   useEffect(() => {
@@ -90,7 +86,13 @@ export function AdminTabs({ layer }: AdminTabsProps) {
         published,
       };
 
-      // For dynamic layers, include all config fields
+      // Always include legend, permissions, group and opacity
+      body.group_id = groupId || null;
+      body.legend_config = legendConfig;
+      body.permissions_config = permissionsConfig;
+      body.default_opacity = defaultOpacity;
+
+      // For dynamic layers, also include source/type info
       if (layer.is_dynamic) {
         body.is_dynamic = true;
         body.title = title;
@@ -98,10 +100,6 @@ export function AdminTabs({ layer }: AdminTabsProps) {
         body.schema_name = layer.schema;
         body.table_name = layer.table;
         body.vector_style_type = layer.vectorStyleType;
-        body.group_id = groupId || null;
-        body.legend_config = legendConfig;
-        body.permissions_config = permissionsConfig;
-        body.default_opacity = defaultOpacity;
       }
 
       const res = await fetch(`/api/admin/layers/${layer.id}`, {
@@ -126,7 +124,7 @@ export function AdminTabs({ layer }: AdminTabsProps) {
       styleOverrides, visibleFields, metadataOverrides, published,
       title, groupId, legendConfig, permissionsConfig, defaultOpacity]);
 
-  const tabCount = layer.is_dynamic ? 5 : 3;
+  const tabCount = 4;
 
   return (
     <div className="space-y-6">
@@ -153,9 +151,9 @@ export function AdminTabs({ layer }: AdminTabsProps) {
         </div>
       </div>
 
-      {/* Dynamic layer: title + group + opacity */}
-      {layer.is_dynamic && (
-        <div className="space-y-3 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
+      {/* Layer config: group + opacity for all, title + source for dynamic only */}
+      <div className="space-y-3 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
+        {layer.is_dynamic && (
           <div>
             <Label className="text-sm font-medium">Layer Title</Label>
             <Input
@@ -165,45 +163,47 @@ export function AdminTabs({ layer }: AdminTabsProps) {
               className="mt-1"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-sm font-medium">Group</Label>
-              <select
-                value={groupId}
-                onChange={(e) => setGroupId(e.target.value)}
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="">No group (Additional Layers)</option>
-                {allGroups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.path}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Default Opacity</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={Math.round(defaultOpacity * 100)}
-                  onChange={(e) => setDefaultOpacity(Number(e.target.value) / 100)}
-                  className="flex-1"
-                />
-                <span className="text-sm text-gray-600 w-10 text-right">
-                  {Math.round(defaultOpacity * 100)}%
-                </span>
-              </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-sm font-medium">Group</Label>
+            <select
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="">No group (Additional Layers)</option>
+              {allGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.path}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Default Opacity</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={Math.round(defaultOpacity * 100)}
+                onChange={(e) => setDefaultOpacity(Number(e.target.value) / 100)}
+                className="flex-1"
+              />
+              <span className="text-sm text-gray-600 w-10 text-right">
+                {Math.round(defaultOpacity * 100)}%
+              </span>
             </div>
           </div>
+        </div>
+        {layer.is_dynamic && (
           <div className="text-xs text-gray-500">
             Source: {layer.schema}.{layer.table}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <Tabs defaultValue="style">
         <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${tabCount}, 1fr)` }}>
@@ -212,8 +212,7 @@ export function AdminTabs({ layer }: AdminTabsProps) {
             Fields
           </TabsTrigger>
           <TabsTrigger value="info">Info</TabsTrigger>
-          {layer.is_dynamic && <TabsTrigger value="legend">Legend</TabsTrigger>}
-          {layer.is_dynamic && <TabsTrigger value="permissions">Access</TabsTrigger>}
+          <TabsTrigger value="permissions">Access</TabsTrigger>
         </TabsList>
 
         <TabsContent value="style" className="mt-4">
@@ -221,6 +220,8 @@ export function AdminTabs({ layer }: AdminTabsProps) {
             layer={layer}
             overrides={styleOverrides}
             onChange={setStyleOverrides}
+            legend={legendConfig}
+            onLegendChange={setLegendConfig}
           />
         </TabsContent>
 
@@ -241,23 +242,12 @@ export function AdminTabs({ layer }: AdminTabsProps) {
           />
         </TabsContent>
 
-        {layer.is_dynamic && (
-          <TabsContent value="legend" className="mt-4">
-            <LegendConfigForm
-              legend={legendConfig}
-              onChange={setLegendConfig}
-            />
-          </TabsContent>
-        )}
-
-        {layer.is_dynamic && (
-          <TabsContent value="permissions" className="mt-4">
-            <PermissionsForm
-              permissions={permissionsConfig}
-              onChange={setPermissionsConfig}
-            />
-          </TabsContent>
-        )}
+        <TabsContent value="permissions" className="mt-4">
+          <PermissionsForm
+            permissions={permissionsConfig}
+            onChange={setPermissionsConfig}
+          />
+        </TabsContent>
       </Tabs>
 
       {/* Save */}

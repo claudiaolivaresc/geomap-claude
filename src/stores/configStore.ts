@@ -124,8 +124,8 @@ function buildDynamicLayerConfig(id: string, entry: AdminOverrideEntry): LayerCo
       citation: entry.metadata_overrides?.citation || '',
     },
     permissions: entry.permissions_config || {
-      requiresAuth: false,
-      allowedRoles: ['public', 'free', 'premium', 'admin'],
+      visibility: 'public',
+      allowedCompanies: [],
     },
     defaultOpacity: entry.default_opacity ?? 1,
     schema,

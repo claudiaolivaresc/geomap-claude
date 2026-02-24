@@ -15,18 +15,15 @@ interface LayerItemProps {
 export function LayerItem({ layer, depth }: LayerItemProps) {
   const { isLayerActive, toggleLayer, addLayerToMap, removeLayerFromMap } = useLayerStore();
   const { hasPermission } = useAuthStore();
-  const { openLayerInfo, setUpgradeModalOpen } = useUIStore();
+  const { openLayerInfo } = useUIStore();
   const { map } = useMapStore();
 
   const isActive = isLayerActive(layer.id);
   const canAccess = hasPermission(layer.permissions);
-  const isPremium = layer.permissions.requiresAuth &&
-    layer.permissions.allowedRoles.includes('premium') &&
-    !layer.permissions.allowedRoles.includes('free');
+  const isRestricted = layer.permissions.visibility === 'restricted';
 
   const handleToggle = () => {
     if (!canAccess) {
-      setUpgradeModalOpen(true);
       return;
     }
 
@@ -119,10 +116,10 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
         )}
       </div>
 
-      {/* Premium badge */}
-      {isPremium && !canAccess && (
-        <span className="px-2 py-0.5 text-xs font-medium text-white rounded-full" style={{ backgroundColor: '#e14716' }}>
-          PRO
+      {/* Restricted badge */}
+      {isRestricted && !canAccess && (
+        <span className="px-2 py-0.5 text-xs font-medium text-white rounded-full bg-blue-500">
+          RESTRICTED
         </span>
       )}
 
