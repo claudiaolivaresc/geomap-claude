@@ -48,6 +48,9 @@ export function LayerSelector({ layers, selectedId, onSelect }: LayerSelectorPro
                   <span className="text-xs text-gray-400 ml-1">
                     ({layer.type})
                   </span>
+                  {layer.is_dynamic && (
+                    <span className="text-xs text-indigo-500 ml-1">dynamic</span>
+                  )}
                 </span>
               </SelectItem>
             ))}

@@ -13,7 +13,7 @@ export async function GET(
     return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   }
 
-  // Validate table against known layers + dynamic layers
+  // Validate table against known layers, dynamic layers, and discoverable PostGIS tables
   const allowed = new Set(
     getAllLayers()
       .filter((l) => l.schema && l.table)
@@ -30,6 +30,25 @@ export async function GET(
     }
   } catch {
     // DB not available, continue with static only
+  }
+
+  // Also allow any table discoverable from geometry_columns / raster_columns (for new layer registration)
+  if (!allowed.has(table)) {
+    try {
+      const [schema, tableName] = table.split('.');
+      const geoCheck = await pool.query(
+        `SELECT 1 FROM geometry_columns WHERE f_table_schema = $1 AND f_table_name = $2
+         UNION ALL
+         SELECT 1 FROM raster_columns WHERE r_table_schema = $1 AND r_table_name = $2
+         LIMIT 1`,
+        [schema, tableName]
+      );
+      if (geoCheck.rows.length > 0) {
+        allowed.add(table);
+      }
+    } catch {
+      // Ignore — will fall through to error below
+    }
   }
 
   if (!allowed.has(table)) {

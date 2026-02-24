@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { useUIStore, useLayerStore, useMapStore, useUploadStore } from '@/stores';
-import { getLayerById } from '@/config';
+import { getAnyLayerById } from '@/lib/layerLookup';
 import { cn } from '@/lib/utils';
 import type { LayerConfig, VectorStyle } from '@/types';
 
@@ -49,7 +49,7 @@ export function Legend() {
     .map(([id, state]) => ({
       id,
       state,
-      config: getLayerById(id),
+      config: getAnyLayerById(id),
     }))
     .filter((item) => item.config !== undefined);
 

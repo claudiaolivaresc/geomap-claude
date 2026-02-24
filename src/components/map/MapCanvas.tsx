@@ -4,7 +4,8 @@ import { useRef, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapStore, useLayerStore, useConfigStore, useUploadStore, useMeasureStore } from '@/stores';
-import { MAP_CONFIG, MAPBOX_ACCESS_TOKEN, getAllLayers, VECTOR_LAYER_INFO } from '@/config';
+import { MAP_CONFIG, MAPBOX_ACCESS_TOKEN, VECTOR_LAYER_INFO } from '@/config';
+import { getAnyLayerById, getAllLayersIncludingDynamic } from '@/lib/layerLookup';
 import type { TooltipField } from '@/config/vectorLayerInfo';
 import { queryRasterValues } from '@/lib/rasterQuery';
 
@@ -59,8 +60,7 @@ export function MapCanvas() {
       // Add any active layers that were persisted
       activeLayers.forEach((state, layerId) => {
         if (state.visible) {
-          const { getLayerById } = require('@/config');
-          const config = getLayerById(layerId);
+          const config = getAnyLayerById(layerId);
           if (config) {
             addLayerToMap(map, config);
           }
@@ -86,7 +86,7 @@ export function MapCanvas() {
       if (useMeasureStore.getState().mode) return;
 
       const { activeLayers: layers } = useLayerStore.getState();
-      const allConfigs = getAllLayers();
+      const allConfigs = getAllLayersIncludingDynamic();
       const htmlParts: string[] = [];
 
       // ── Vector: queryRenderedFeatures ──
@@ -307,8 +307,7 @@ export function MapCanvas() {
         // Re-add layers after style change
         layersToRestore.forEach((state, layerId) => {
           if (state.visible) {
-            const { getLayerById } = require('@/config');
-            const config = getLayerById(layerId);
+            const config = getAnyLayerById(layerId);
             if (config) {
               addLayerToMap(map, config);
             }

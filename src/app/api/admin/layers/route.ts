@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
-import { getAllLayers, LAYER_GROUPS } from '@/config';
+import { getAllLayers, LAYER_GROUPS, getAllGroupIds } from '@/config';
 import type { AdminLayerView } from '@/types/admin.types';
 import type { LayerGroup } from '@/types';
 
@@ -16,29 +16,37 @@ function findGroupForLayer(layerId: string, groups: LayerGroup[], parentTitle = 
   return '';
 }
 
+function findGroupPathById(groupId: string): string {
+  const allGroups = getAllGroupIds();
+  const match = allGroups.find((g) => g.id === groupId);
+  return match?.path || groupId || 'Uncategorized';
+}
+
 export async function GET() {
   const allLayers = getAllLayers();
   const pool = getPool();
 
-  // Fetch admin overrides from DB
-  const overridesMap = new Map<string, { style_overrides: Record<string, unknown>; visible_fields: string[]; metadata_overrides: Record<string, string>; published: boolean }>();
+  // Fetch ALL admin config rows from DB
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const allDbRows: any[] = [];
+  const overridesMap = new Map<string, any>();
+
   if (pool) {
     try {
       const result = await pool.query('SELECT * FROM public.layer_admin_config');
       for (const row of result.rows) {
-        overridesMap.set(row.layer_id, {
-          style_overrides: row.style_overrides || {},
-          visible_fields: row.visible_fields || [],
-          metadata_overrides: row.metadata_overrides || {},
-          published: row.published !== false,
-        });
+        overridesMap.set(row.layer_id, row);
+        if (row.is_dynamic) {
+          allDbRows.push(row);
+        }
       }
     } catch {
       // DB not available, continue with defaults
     }
   }
 
-  const layers: AdminLayerView[] = allLayers.map((layer) => {
+  // Build AdminLayerView[] from static layers (existing logic)
+  const staticViews: AdminLayerView[] = allLayers.map((layer) => {
     const override = overridesMap.get(layer.id);
     const vectorStyle = layer.type === 'vector'
       ? (layer.style as { type?: string })
@@ -76,5 +84,39 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json({ layers });
+  // Build AdminLayerView[] from dynamic layers in DB
+  const dynamicViews: AdminLayerView[] = allDbRows.map((row) => {
+    const title = row.title || row.metadata_overrides?.title || `${row.schema_name}.${row.table_name}`;
+    return {
+      id: row.layer_id,
+      title,
+      type: (row.layer_type as 'raster' | 'vector') || 'vector',
+      schema: row.schema_name,
+      table: row.table_name,
+      group: findGroupPathById(row.group_id),
+      vectorStyleType: row.vector_style_type as 'circle' | 'line' | 'fill' | undefined,
+      defaultOpacity: row.default_opacity ?? 1,
+      style_overrides: row.style_overrides || {},
+      visible_fields: row.visible_fields || [],
+      published: row.published !== false,
+      is_dynamic: true,
+      legend_config: row.legend_config && Object.keys(row.legend_config).length > 0 ? row.legend_config : undefined,
+      permissions_config: row.permissions_config,
+      metadata: {
+        title,
+        description: row.metadata_overrides?.description || '',
+        citation: row.metadata_overrides?.citation || '',
+      },
+      defaults: {
+        paint: row.style_overrides || {},
+        opacity: row.default_opacity ?? 1,
+        metadata: {
+          description: row.metadata_overrides?.description || '',
+          citation: row.metadata_overrides?.citation || '',
+        },
+      },
+    };
+  });
+
+  return NextResponse.json({ layers: [...staticViews, ...dynamicViews] });
 }

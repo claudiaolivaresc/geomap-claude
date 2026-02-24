@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Map as MapboxMap } from 'mapbox-gl';
 import type { ActiveLayer, LayerConfig } from '@/types';
-import { getLayerById } from '@/config';
+import { getAnyLayerById } from '@/lib/layerLookup';
 import { COLOR_RAMPS } from '@/config/layers.config';
 import { useConfigStore } from './configStore';
 
@@ -42,7 +42,7 @@ export const useLayerStore = create<LayerStore>()(
           const layer = newActiveLayers.get(layerId)!;
           newActiveLayers.set(layerId, { ...layer, visible: !layer.visible });
         } else {
-          const config = getLayerById(layerId);
+          const config = getAnyLayerById(layerId);
           newActiveLayers.set(layerId, {
             id: layerId,
             visible: true,
@@ -61,7 +61,7 @@ export const useLayerStore = create<LayerStore>()(
           const layer = newActiveLayers.get(layerId)!;
           newActiveLayers.set(layerId, { ...layer, visible });
         } else if (visible) {
-          const config = getLayerById(layerId);
+          const config = getAnyLayerById(layerId);
           newActiveLayers.set(layerId, {
             id: layerId,
             visible: true,
@@ -228,7 +228,7 @@ export const useLayerStore = create<LayerStore>()(
 
         if (!layerState || !map.getLayer(mapLayerId)) return;
 
-        const config = getLayerById(layerId);
+        const config = getAnyLayerById(layerId);
         if (!config) return;
 
         // Update visibility

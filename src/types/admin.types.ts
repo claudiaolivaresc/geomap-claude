@@ -1,3 +1,5 @@
+import type { LayerLegend, LayerPermissions } from './layer.types';
+
 export interface ColorStop {
   position: number;
   color: string;
@@ -20,6 +22,11 @@ export interface AdminOverride {
   vector_style_type?: string;
   group_id?: string;
   source_config?: Record<string, unknown>;
+  title?: string;
+  legend_config?: LayerLegend;
+  permissions_config?: LayerPermissions;
+  default_opacity?: number;
+  display_order?: number;
   updated_at?: string;
   updated_by?: string;
 }
@@ -37,6 +44,8 @@ export interface AdminLayerView {
   visible_fields: string[];
   published: boolean;
   is_dynamic?: boolean;
+  legend_config?: LayerLegend;
+  permissions_config?: LayerPermissions;
   metadata: { title: string; description: string; citation?: string };
   defaults: {
     paint: Record<string, unknown>;
@@ -58,6 +67,7 @@ export interface PostGISTable {
   has_raster: boolean;
   full_name: string;
   already_registered: boolean;
+  suggested_style_type?: 'circle' | 'line' | 'fill';
 }
 
 export interface UpdateLayerConfig {
@@ -76,4 +86,9 @@ export interface UpdateLayerConfig {
   vector_style_type?: string;
   group_id?: string;
   source_config?: Record<string, unknown>;
+  title?: string;
+  legend_config?: Record<string, unknown>;
+  permissions_config?: Record<string, unknown>;
+  default_opacity?: number;
+  display_order?: number;
 }

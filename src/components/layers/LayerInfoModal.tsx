@@ -1,7 +1,7 @@
 'use client';
 
 import { useUIStore } from '@/stores';
-import { getLayerById } from '@/config';
+import { getAnyLayerById } from '@/lib/layerLookup';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
 export function LayerInfoModal() {
   const { layerInfoModalOpen, selectedLayerForInfo, closeLayerInfo } = useUIStore();
 
-  const layer = selectedLayerForInfo ? getLayerById(selectedLayerForInfo) : null;
+  const layer = selectedLayerForInfo ? getAnyLayerById(selectedLayerForInfo) : null;
 
   if (!layer) {
     return (

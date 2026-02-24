@@ -26,8 +26,9 @@ export async function PUT(
     await pool.query(
       `INSERT INTO public.layer_admin_config (
          layer_id, style_overrides, visible_fields, metadata_overrides, published,
-         is_dynamic, layer_type, schema_name, table_name, vector_style_type, group_id, source_config, updated_at
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+         is_dynamic, layer_type, schema_name, table_name, vector_style_type, group_id, source_config,
+         title, legend_config, permissions_config, default_opacity, display_order, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
        ON CONFLICT (layer_id) DO UPDATE SET
          style_overrides = COALESCE($2, layer_admin_config.style_overrides),
          visible_fields = COALESCE($3, layer_admin_config.visible_fields),
@@ -40,6 +41,11 @@ export async function PUT(
          vector_style_type = COALESCE($10, layer_admin_config.vector_style_type),
          group_id = COALESCE($11, layer_admin_config.group_id),
          source_config = COALESCE($12, layer_admin_config.source_config),
+         title = COALESCE($13, layer_admin_config.title),
+         legend_config = COALESCE($14, layer_admin_config.legend_config),
+         permissions_config = COALESCE($15, layer_admin_config.permissions_config),
+         default_opacity = COALESCE($16, layer_admin_config.default_opacity),
+         display_order = COALESCE($17, layer_admin_config.display_order),
          updated_at = NOW()`,
       [
         id,
@@ -54,6 +60,11 @@ export async function PUT(
         body.vector_style_type ?? null,
         body.group_id ?? null,
         JSON.stringify(body.source_config || {}),
+        body.title ?? null,
+        body.legend_config ? JSON.stringify(body.legend_config) : null,
+        body.permissions_config ? JSON.stringify(body.permissions_config) : null,
+        body.default_opacity ?? null,
+        body.display_order ?? null,
       ]
     );
 
