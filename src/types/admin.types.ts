@@ -5,10 +5,28 @@ export interface ColorStop {
   color: string;
 }
 
+/** A visible field with optional display label */
+export interface FieldEntry {
+  name: string;
+  label: string;
+}
+
+/** Normalize visible_fields from DB — handles legacy string[] and new FieldEntry[] */
+export function normalizeFields(raw: unknown): FieldEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    if (typeof item === 'string') return { name: item, label: item };
+    if (item && typeof item === 'object' && 'name' in item) {
+      return { name: String(item.name), label: String(item.label || item.name) };
+    }
+    return { name: String(item), label: String(item) };
+  });
+}
+
 export interface AdminOverride {
   layer_id: string;
   style_overrides: Record<string, unknown>;
-  visible_fields: string[];
+  visible_fields: FieldEntry[];
   metadata_overrides: {
     title?: string;
     description?: string;
@@ -41,7 +59,7 @@ export interface AdminLayerView {
   vectorStyleType?: 'circle' | 'line' | 'fill';
   defaultOpacity: number;
   style_overrides: Record<string, unknown>;
-  visible_fields: string[];
+  visible_fields: FieldEntry[];
   published: boolean;
   is_dynamic?: boolean;
   legend_config?: LayerLegend;

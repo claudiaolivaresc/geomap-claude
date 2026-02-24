@@ -11,7 +11,7 @@ import { PermissionsForm } from './PermissionsForm';
 import { SaveButton } from './SaveButton';
 import { PublishToggle } from './PublishToggle';
 import { getAllGroupIds } from '@/config/layers.config';
-import type { AdminLayerView } from '@/types/admin.types';
+import type { AdminLayerView, FieldEntry } from '@/types/admin.types';
 import type { LayerLegend, LayerPermissions } from '@/types';
 
 interface AdminTabsProps {
@@ -25,7 +25,7 @@ const defaultPermissions: LayerPermissions = {
 
 export function AdminTabs({ layer }: AdminTabsProps) {
   const [styleOverrides, setStyleOverrides] = useState<Record<string, unknown>>(layer.style_overrides);
-  const [visibleFields, setVisibleFields] = useState<string[]>(layer.visible_fields);
+  const [visibleFields, setVisibleFields] = useState<FieldEntry[]>(layer.visible_fields);
   const [metadataOverrides, setMetadataOverrides] = useState<{
     title?: string;
     description?: string;

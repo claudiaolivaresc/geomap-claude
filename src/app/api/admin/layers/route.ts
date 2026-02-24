@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
 import { getAllLayers, LAYER_GROUPS, getAllGroupIds } from '@/config';
+import { normalizeFields } from '@/types/admin.types';
 import type { AdminLayerView } from '@/types/admin.types';
 import type { LayerGroup } from '@/types';
 
@@ -72,7 +73,7 @@ export async function GET() {
       vectorStyleType: vectorStyle?.type as 'circle' | 'line' | 'fill' | undefined,
       defaultOpacity: override?.default_opacity ?? layer.defaultOpacity ?? 1,
       style_overrides: override?.style_overrides || {},
-      visible_fields: override?.visible_fields || [],
+      visible_fields: normalizeFields(override?.visible_fields),
       published: override?.published !== false,
       legend_config: override?.legend_config && Object.keys(override.legend_config).length > 0
         ? override.legend_config
@@ -107,7 +108,7 @@ export async function GET() {
       vectorStyleType: row.vector_style_type as 'circle' | 'line' | 'fill' | undefined,
       defaultOpacity: row.default_opacity ?? 1,
       style_overrides: row.style_overrides || {},
-      visible_fields: row.visible_fields || [],
+      visible_fields: normalizeFields(row.visible_fields),
       published: row.published !== false,
       is_dynamic: true,
       legend_config: row.legend_config && Object.keys(row.legend_config).length > 0 ? row.legend_config : undefined,

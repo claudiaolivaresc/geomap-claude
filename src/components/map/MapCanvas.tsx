@@ -118,14 +118,20 @@ export function MapCanvas() {
           // Helper: render all properties as a generic table
           const renderAllProps = () => {
             const override = configState.getOverride(layerId);
-            const allowedFields = override?.visible_fields?.length ? override.visible_fields : null;
+            const fieldEntries = override?.visible_fields?.length ? override.visible_fields : null;
+            const allowedNames = fieldEntries ? new Set(fieldEntries.map((f) => f.name)) : null;
+            const labelMap = fieldEntries
+              ? new Map(fieldEntries.map((f) => [f.name, f.label]))
+              : null;
             return Object.entries(props)
               .filter(([k]) => !k.startsWith('_') && k !== 'geom' && k !== 'gid')
-              .filter(([k]) => !allowedFields || allowedFields.includes(k))
+              .filter(([k]) => !allowedNames || allowedNames.has(k))
               .map(
-                ([k, v]) =>
-                  `<tr><td style="padding:2px 8px 2px 0;font-size:11px;color:#888;white-space:nowrap;">${k}</td>` +
-                  `<td style="padding:2px 0;font-size:12px;color:#141d2d;font-weight:500;">${v ?? '—'}</td></tr>`
+                ([k, v]) => {
+                  const displayLabel = labelMap?.get(k) || k;
+                  return `<tr><td style="padding:2px 8px 2px 0;font-size:11px;color:#888;white-space:nowrap;">${displayLabel}</td>` +
+                  `<td style="padding:2px 0;font-size:12px;color:#141d2d;font-weight:500;">${v ?? '—'}</td></tr>`;
+                }
               )
               .join('');
           };

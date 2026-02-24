@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
+import { normalizeFields } from '@/types/admin.types';
 
 export async function GET() {
   const pool = getPool();
@@ -17,7 +18,7 @@ export async function GET() {
 
     const overrides: Record<string, {
       style_overrides: Record<string, unknown>;
-      visible_fields: string[];
+      visible_fields: { name: string; label: string }[];
       metadata_overrides: Record<string, string>;
       published: boolean;
       is_dynamic?: boolean;
@@ -35,7 +36,7 @@ export async function GET() {
     for (const row of result.rows) {
       overrides[row.layer_id] = {
         style_overrides: row.style_overrides || {},
-        visible_fields: row.visible_fields || [],
+        visible_fields: normalizeFields(row.visible_fields),
         metadata_overrides: row.metadata_overrides || {},
         published: row.published !== false,
         is_dynamic: row.is_dynamic || false,

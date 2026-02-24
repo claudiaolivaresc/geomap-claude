@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { TILESERVER_URLS } from '@/config/map.config';
 import type { LayerConfig, LayerLegend, LayerPermissions, VectorStyleType } from '@/types';
+import type { FieldEntry } from '@/types/admin.types';
 
 export interface AdminOverrideEntry {
   style_overrides: Record<string, unknown>;
-  visible_fields: string[];
+  visible_fields: FieldEntry[];
   metadata_overrides: { title?: string; description?: string; citation?: string };
   published: boolean;
   is_dynamic?: boolean;

@@ -4,6 +4,7 @@ interface UIState {
   sidebarOpen: boolean;
   sidebarCollapsed: boolean;
   sidebarWidth: number;
+  sidebarTab: 'layers' | 'active';
   legendOpen: boolean;
   layerInfoModalOpen: boolean;
   selectedLayerForInfo: string | null;
@@ -19,6 +20,7 @@ interface UIActions {
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebarCollapsed: () => void;
   setSidebarWidth: (width: number) => void;
+  setSidebarTab: (tab: 'layers' | 'active') => void;
   setLegendOpen: (open: boolean) => void;
   toggleLegend: () => void;
   openLayerInfo: (layerId: string) => void;
@@ -36,6 +38,7 @@ export const useUIStore = create<UIStore>()((set) => ({
   sidebarOpen: true,
   sidebarCollapsed: false,
   sidebarWidth: 320,
+  sidebarTab: 'layers',
   legendOpen: true,
   layerInfoModalOpen: false,
   selectedLayerForInfo: null,
@@ -52,6 +55,7 @@ export const useUIStore = create<UIStore>()((set) => ({
   toggleSidebarCollapsed: () =>
     set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setSidebarWidth: (width) => set({ sidebarWidth: width }),
+  setSidebarTab: (tab) => set({ sidebarTab: tab }),
 
   setLegendOpen: (open) => set({ legendOpen: open }),
   toggleLegend: () => set((state) => ({ legendOpen: !state.legendOpen })),

@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Layers, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useUIStore } from '@/stores';
 import { LayerTree } from '@/components/layers/LayerTree';
+import { ActiveLayersContent } from '@/components/layers/Legend';
 import { LayerUpload } from '@/components/upload/LayerUpload';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,8 @@ export function Sidebar() {
     toggleSidebarCollapsed,
     sidebarWidth,
     setSidebarWidth,
+    sidebarTab,
+    setSidebarTab,
     isMobile,
   } = useUIStore();
 
@@ -59,32 +62,68 @@ export function Sidebar() {
   const sidebarContent = (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#b4ccc5] flex-shrink-0" style={{ backgroundColor: '#141d2d' }}>
-        <h2 className="font-semibold text-white">Layers</h2>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#b4ccc5] flex-shrink-0" style={{ backgroundColor: '#141d2d' }}>
+        <h2 className="font-semibold text-white text-sm">
+          {sidebarTab === 'layers' ? 'Layers' : 'Active Layers'}
+        </h2>
         <div className="flex items-center gap-1">
-          <LayerUpload />
+          {sidebarTab === 'layers' && <LayerUpload />}
           {!isMobile && (
             <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/10"
-            onClick={toggleSidebarCollapsed}
-          >
-            {sidebarCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/10"
+              onClick={toggleSidebarCollapsed}
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Layer tree */}
+      {/* Tab bar */}
+      <div className="flex border-b border-[#b4ccc5] flex-shrink-0 bg-white">
+        <button
+          type="button"
+          onClick={() => setSidebarTab('layers')}
+          className={cn(
+            'flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors',
+            sidebarTab === 'layers'
+              ? 'text-[#141d2d] border-b-2 border-[#ffa925]'
+              : 'text-gray-500 hover:text-gray-700'
+          )}
+        >
+          <Layers className="h-3.5 w-3.5" />
+          Layers
+        </button>
+        <button
+          type="button"
+          onClick={() => setSidebarTab('active')}
+          className={cn(
+            'flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors',
+            sidebarTab === 'active'
+              ? 'text-[#141d2d] border-b-2 border-[#ffa925]'
+              : 'text-gray-500 hover:text-gray-700'
+          )}
+        >
+          <Map className="h-3.5 w-3.5" />
+          Active
+        </button>
+      </div>
+
+      {/* Tab content */}
       <ScrollArea className="flex-1 overflow-hidden">
-        <div className="p-4">
-          <LayerTree />
-        </div>
+        {sidebarTab === 'layers' ? (
+          <div className="p-4">
+            <LayerTree />
+          </div>
+        ) : (
+          <ActiveLayersContent />
+        )}
       </ScrollArea>
     </div>
   );

@@ -4,7 +4,7 @@ import { Info, Lock } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useLayerStore, useAuthStore, useUIStore, useMapStore } from '@/stores';
-import type { LayerConfig, VectorStyle } from '@/types';
+import type { LayerConfig } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface LayerItemProps {
@@ -42,19 +42,6 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
     openLayerInfo(layer.id);
   };
 
-  // Get preview color for the layer
-  const getPreviewColor = () => {
-    if (layer.legend?.type === 'symbol') {
-      return layer.legend.items[0]?.color || '#6b7280';
-    }
-    if (layer.legend?.type === 'gradient') {
-      return undefined; // Will use gradient
-    }
-    return '#6b7280';
-  };
-
-  const previewColor = getPreviewColor();
-
   return (
     <div
       className={cn(
@@ -76,31 +63,6 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
         </div>
       )}
 
-      {/* Layer preview (color swatch or gradient) */}
-      <div className="flex-shrink-0 flex items-center">
-        {layer.legend?.type === 'gradient' ? (
-          <div
-            className="w-8 h-5 rounded border border-gray-200"
-            style={{ background: layer.legend.gradient }}
-          />
-        ) : (layer.style as VectorStyle)?.type === 'line' ? (
-          <div
-            className="w-6 h-[3px] rounded-full"
-            style={{ backgroundColor: previewColor }}
-          />
-        ) : (layer.style as VectorStyle)?.type === 'fill' ? (
-          <div
-            className="w-5 h-5 rounded-sm border border-gray-200"
-            style={{ backgroundColor: previewColor }}
-          />
-        ) : (
-          <div
-            className="w-5 h-5 rounded-full border border-gray-200"
-            style={{ backgroundColor: previewColor }}
-          />
-        )}
-      </div>
-
       {/* Layer info */}
       <div className="flex-1 min-w-0" onClick={canAccess ? handleToggle : undefined}>
         <p className={cn(
@@ -109,11 +71,6 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
         )}>
           {layer.title}
         </p>
-        {layer.legend?.type === 'gradient' && (
-          <p className="text-xs text-[#819a93]">
-            {layer.legend.min} - {layer.legend.max} {layer.legend.unit}
-          </p>
-        )}
       </div>
 
       {/* Restricted badge */}
