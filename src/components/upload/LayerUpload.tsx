@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMapStore, useUploadStore } from '@/stores';
-import { parseGeoPackage } from '@/lib/geopackage';
+import { parseFile, ACCEPTED_EXTENSIONS } from '@/lib/parsers';
 import type { Feature } from 'geojson';
 
 /** Detect the predominant geometry type from a FeatureCollection */
@@ -19,7 +19,7 @@ function detectGeometryType(features: Feature[]): 'Polygon' | 'LineString' | 'Po
   return 'Point';
 }
 
-export function GeoPackageUpload() {
+export function LayerUpload() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const { map } = useMapStore();
@@ -31,8 +31,7 @@ export function GeoPackageUpload() {
 
     setLoading(true);
     try {
-      const buffer = await file.arrayBuffer();
-      const tables = await parseGeoPackage(buffer);
+      const tables = await parseFile(file);
 
       for (const table of tables) {
         const id = `upload-${Date.now()}-${table.name}`;
@@ -100,11 +99,10 @@ export function GeoPackageUpload() {
         });
       }
     } catch (err) {
-      console.error('Failed to parse GeoPackage:', err);
-      alert('Failed to parse GeoPackage file. Please check the file format.');
+      console.error('Failed to parse uploaded file:', err);
+      alert(err instanceof Error ? err.message : 'Failed to parse file. Please check the format.');
     } finally {
       setLoading(false);
-      // Reset input so the same file can be re-uploaded
       if (inputRef.current) inputRef.current.value = '';
     }
   };
@@ -114,7 +112,7 @@ export function GeoPackageUpload() {
       <input
         ref={inputRef}
         type="file"
-        accept=".gpkg"
+        accept={ACCEPTED_EXTENSIONS}
         className="hidden"
         onChange={handleFileChange}
       />
@@ -124,7 +122,7 @@ export function GeoPackageUpload() {
         className="h-8 w-8 text-white hover:bg-white/10"
         onClick={() => inputRef.current?.click()}
         disabled={loading}
-        title="Upload GeoPackage"
+        title="Upload layer"
       >
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />

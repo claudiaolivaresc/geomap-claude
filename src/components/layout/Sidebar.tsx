@@ -7,8 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useUIStore } from '@/stores';
 import { LayerTree } from '@/components/layers/LayerTree';
-import { Legend } from '@/components/layers/Legend';
-import { GeoPackageUpload } from '@/components/upload/GeoPackageUpload';
+import { LayerUpload } from '@/components/upload/LayerUpload';
 import { cn } from '@/lib/utils';
 
 const MIN_WIDTH = 240;
@@ -63,7 +62,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between p-4 border-b border-[#b4ccc5] flex-shrink-0" style={{ backgroundColor: '#141d2d' }}>
         <h2 className="font-semibold text-white">Layers</h2>
         <div className="flex items-center gap-1">
-          <GeoPackageUpload />
+          <LayerUpload />
           {!isMobile && (
             <Button
             variant="ghost"
@@ -87,11 +86,6 @@ export function Sidebar() {
           <LayerTree />
         </div>
       </ScrollArea>
-
-      {/* Legend */}
-      <div className="border-t border-[#b4ccc5] min-h-0 overflow-y-auto" style={{ maxHeight: '40%' }}>
-        <Legend />
-      </div>
     </div>
   );
 
