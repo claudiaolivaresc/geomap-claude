@@ -45,8 +45,8 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-2 p-2 rounded-lg border border-[#b4ccc5]/50 bg-white transition-colors',
-        canAccess ? 'hover:bg-[#f6fbf8]' : 'opacity-60 cursor-not-allowed',
+        'flex items-center gap-1.5 py-1 px-1 rounded transition-colors',
+        canAccess ? 'hover:bg-[#e8f2ed] cursor-pointer' : 'opacity-60 cursor-not-allowed',
         depth > 0 && 'ml-3'
       )}
     >
@@ -55,27 +55,28 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
         <Checkbox
           checked={isActive}
           onCheckedChange={handleToggle}
-          className="data-[state=checked]:bg-[#ffa925] data-[state=checked]:border-[#ffa925]"
+          className="h-3.5 w-3.5 data-[state=checked]:bg-[#ffa925] data-[state=checked]:border-[#ffa925]"
         />
       ) : (
-        <div className="w-4 h-4 flex items-center justify-center">
-          <Lock className="h-3.5 w-3.5 text-[#8b94a7]" />
+        <div className="w-3.5 h-3.5 flex items-center justify-center">
+          <Lock className="h-3 w-3 text-[#8b94a7]" />
         </div>
       )}
 
-      {/* Layer info */}
-      <div className="flex-1 min-w-0" onClick={canAccess ? handleToggle : undefined}>
-        <p className={cn(
-          'text-sm font-medium break-words',
+      {/* Layer name */}
+      <span
+        className={cn(
+          'text-[13px] leading-tight flex-1 min-w-0 truncate',
           canAccess ? 'text-[#141d2d]' : 'text-[#8b94a7]'
-        )}>
-          {layer.title}
-        </p>
-      </div>
+        )}
+        onClick={canAccess ? handleToggle : undefined}
+      >
+        {layer.title}
+      </span>
 
       {/* Restricted badge */}
       {isRestricted && !canAccess && (
-        <span className="px-2 py-0.5 text-xs font-medium text-white rounded-full bg-blue-500">
+        <span className="px-1.5 py-0.5 text-[10px] font-medium text-white rounded bg-blue-500 flex-shrink-0">
           RESTRICTED
         </span>
       )}
@@ -84,10 +85,10 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7 flex-shrink-0"
+        className="h-5 w-5 flex-shrink-0"
         onClick={handleInfoClick}
       >
-        <Info className="h-4 w-4 text-[#819a93]" />
+        <Info className="h-3 w-3 text-[#819a93]" />
       </Button>
     </div>
   );

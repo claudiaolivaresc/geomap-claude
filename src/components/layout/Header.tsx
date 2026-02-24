@@ -90,7 +90,7 @@ export function Header() {
       </div>
 
       {/* Right side actions */}
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         {/* Dev role switcher */}
         {process.env.NODE_ENV === 'development' && (
           <DropdownMenu>

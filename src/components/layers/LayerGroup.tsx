@@ -88,7 +88,7 @@ export function LayerGroup({ group, depth }: LayerGroupProps) {
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="space-y-1 pt-1">
+        <div className="space-y-0 pt-0.5">
           {/* Nested groups */}
           {group.children?.map((childGroup) => (
             <LayerGroup
