@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'GeoMap - Project InnerSpace',
+  title: 'GeoMap™ Beta | Project InnerSpace',
   description: 'Interactive geothermal and geospatial data visualization platform',
   keywords: ['geothermal', 'geospatial', 'maps', 'energy', 'geology'],
 };
