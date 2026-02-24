@@ -1,10 +1,44 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Map as MapboxMap } from 'mapbox-gl';
-import type { ActiveLayer, LayerConfig } from '@/types';
+import type { ActiveLayer, LayerConfig, VectorStyle } from '@/types';
 import { getAnyLayerById } from '@/lib/layerLookup';
 import { COLOR_RAMPS } from '@/config/layers.config';
 import { useConfigStore } from './configStore';
+
+/** GIS stacking order: points on top (0), rasters at bottom (3) */
+function getLayerTypeRank(layerId: string): number {
+  const config = getAnyLayerById(layerId);
+  if (!config) return 3;
+  if (config.type === 'raster') return 3;
+  const vectorType = (config.style as VectorStyle)?.type;
+  if (vectorType === 'circle') return 0;
+  if (vectorType === 'line') return 1;
+  if (vectorType === 'fill') return 2;
+  return 3;
+}
+
+/** Insert a new layer into the Map at the correct position by type rank */
+function insertLayerSorted(
+  activeLayers: Map<string, ActiveLayer>,
+  layerId: string,
+  entry: ActiveLayer,
+): Map<string, ActiveLayer> {
+  const newRank = getLayerTypeRank(layerId);
+  const entries = Array.from(activeLayers.entries());
+
+  // Find insertion point: before the first entry with a strictly higher rank
+  let insertIdx = entries.length;
+  for (let i = 0; i < entries.length; i++) {
+    if (getLayerTypeRank(entries[i][0]) > newRank) {
+      insertIdx = i;
+      break;
+    }
+  }
+
+  entries.splice(insertIdx, 0, [layerId, entry]);
+  return new Map(entries);
+}
 
 interface LayerState {
   activeLayers: Map<string, ActiveLayer>;
@@ -20,6 +54,7 @@ interface LayerActions {
   addLayerToMap: (map: MapboxMap, layerConfig: LayerConfig) => void;
   removeLayerFromMap: (map: MapboxMap, layerId: string) => void;
   updateLayerOnMap: (map: MapboxMap, layerId: string) => void;
+  reorderLayers: (orderedIds: string[]) => void;
   isLayerActive: (layerId: string) => boolean;
   getLayerState: (layerId: string) => ActiveLayer | undefined;
 }
@@ -36,40 +71,43 @@ export const useLayerStore = create<LayerStore>()(
       // Actions
       toggleLayer: (layerId) => {
         const { activeLayers } = get();
-        const newActiveLayers = new Map(activeLayers);
 
-        if (newActiveLayers.has(layerId)) {
+        if (activeLayers.has(layerId)) {
+          // Toggle visibility of existing layer
+          const newActiveLayers = new Map(activeLayers);
           const layer = newActiveLayers.get(layerId)!;
           newActiveLayers.set(layerId, { ...layer, visible: !layer.visible });
+          set({ activeLayers: newActiveLayers });
         } else {
+          // Insert new layer at the correct position by type rank
           const config = getAnyLayerById(layerId);
-          newActiveLayers.set(layerId, {
+          const entry: ActiveLayer = {
             id: layerId,
             visible: true,
             opacity: config?.defaultOpacity ?? 1,
-          });
+          };
+          set({ activeLayers: insertLayerSorted(activeLayers, layerId, entry) });
         }
-
-        set({ activeLayers: newActiveLayers });
       },
 
       setLayerVisibility: (layerId, visible) => {
         const { activeLayers } = get();
-        const newActiveLayers = new Map(activeLayers);
 
-        if (newActiveLayers.has(layerId)) {
+        if (activeLayers.has(layerId)) {
+          const newActiveLayers = new Map(activeLayers);
           const layer = newActiveLayers.get(layerId)!;
           newActiveLayers.set(layerId, { ...layer, visible });
+          set({ activeLayers: newActiveLayers });
         } else if (visible) {
+          // Insert new layer at the correct position by type rank
           const config = getAnyLayerById(layerId);
-          newActiveLayers.set(layerId, {
+          const entry: ActiveLayer = {
             id: layerId,
             visible: true,
             opacity: config?.defaultOpacity ?? 1,
-          });
+          };
+          set({ activeLayers: insertLayerSorted(activeLayers, layerId, entry) });
         }
-
-        set({ activeLayers: newActiveLayers });
       },
 
       setLayerOpacity: (layerId, opacity) => {
@@ -251,6 +289,24 @@ export const useLayerStore = create<LayerStore>()(
             map.setPaintProperty(mapLayerId, 'fill-opacity', layerState.opacity);
           }
         }
+      },
+
+      reorderLayers: (orderedIds) => {
+        const { activeLayers } = get();
+        const newActiveLayers = new Map<string, ActiveLayer>();
+        for (const id of orderedIds) {
+          const layer = activeLayers.get(id);
+          if (layer) {
+            newActiveLayers.set(id, layer);
+          }
+        }
+        // Keep any remaining layers not in orderedIds
+        activeLayers.forEach((layer, id) => {
+          if (!newActiveLayers.has(id)) {
+            newActiveLayers.set(id, layer);
+          }
+        });
+        set({ activeLayers: newActiveLayers });
       },
 
       isLayerActive: (layerId) => {

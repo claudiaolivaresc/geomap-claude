@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Header, Sidebar } from '@/components/layout';
 import { MapCanvas, MapControls, MeasureTool } from '@/components/map';
-import { LayerInfoModal } from '@/components/layers';
+import { LayerInfoModal, Legend } from '@/components/layers';
 import { useUIStore, useConfigStore } from '@/stores';
 
 export default function Home() {
@@ -38,8 +38,11 @@ export default function Home() {
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
+        {/* Sidebar (All Layers) */}
         <Sidebar />
+
+        {/* Active Layers Panel */}
+        <Legend />
 
         {/* Map */}
         <main className="flex-1 relative">

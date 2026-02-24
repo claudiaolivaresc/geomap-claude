@@ -76,14 +76,14 @@ export const LAYER_GROUPS: LayerGroup[] = [
     children: [
       {
         id: 'surface-module',
-        title: 'SURFACE MODULE',
+        title: 'Surface module',
         color: '#10b981',
         defaultExpanded: true,
         children: [
           // ── Boundaries ──────────────────────────────────────────
           {
             id: 'boundaries',
-            title: 'BOUNDARIES',
+            title: 'Boundaries',
             color: '#6b7280',
             defaultExpanded: false,
             layers: [
@@ -161,7 +161,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
           // ── Infrastructure ──────────────────────────────────────
           {
             id: 'infrastructure',
-            title: 'INFRASTRUCTURE',
+            title: 'Infrastructure',
             color: '#f59e0b',
             defaultExpanded: false,
             layers: [
@@ -715,7 +715,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
           // ── Topography ──────────────────────────────────────────
           {
             id: 'topography',
-            title: 'TOPOGRAPHY',
+            title: 'Topography',
             color: '#84cc16',
             defaultExpanded: false,
             layers: [],
@@ -723,7 +723,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
           // ── Energy Demand and Production ─────────────────────────
           {
             id: 'energy-demand-production',
-            title: 'ENERGY DEMAND AND PRODUCTION',
+            title: 'Energy demand and production',
             color: '#ec4899',
             defaultExpanded: false,
             layers: [
@@ -950,7 +950,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
           // ── Resources ──────────────────────────────────────────
           {
             id: 'resources',
-            title: 'RESOURCES',
+            title: 'Resources',
             color: '#0ea5e9',
             defaultExpanded: false,
             layers: [
@@ -1004,7 +1004,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
           // ── Surveys ──────────────────────────────────────────
           {
             id: 'surveys',
-            title: 'SURVEYS',
+            title: 'Surveys',
             color: '#3b82f6',
             defaultExpanded: false,
             layers: [

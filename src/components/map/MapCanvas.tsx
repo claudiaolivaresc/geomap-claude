@@ -185,7 +185,7 @@ export function MapCanvas() {
         }
       }
 
-      // ── Uploaded GeoPackage layers ──
+      // ── Uploaded layers ──
       const { uploadedLayers } = useUploadStore.getState();
       const uploadLayerIds = uploadedLayers
         .filter((ul) => ul.visible)
@@ -285,7 +285,14 @@ export function MapCanvas() {
       console.error('Map error:', e.error?.message || e.error || e);
     });
 
+    // Resize map when its container changes size (e.g. sidebar/legend panels open/close)
+    const ro = new ResizeObserver(() => {
+      map.resize();
+    });
+    ro.observe(mapContainer.current);
+
     return () => {
+      ro.disconnect();
       map.remove();
       mapInstance.current = null;
       setMap(null);

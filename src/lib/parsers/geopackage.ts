@@ -1,9 +1,5 @@
-import type { Feature, FeatureCollection } from 'geojson';
-
-export interface ParsedTable {
-  name: string;
-  geojson: FeatureCollection;
-}
+import type { Feature } from 'geojson';
+import type { ParsedTable } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
