@@ -167,8 +167,8 @@ export function ActiveLayersContent() {
   return (
     <div className="p-3 space-y-1">
       {activeLayersList.map(({ id, state, config }, idx) => {
-        const hasMultipleSymbols =
-          config!.legend?.type === 'symbol' && config!.legend.items.length > 1;
+        const hasSymbols =
+          config!.legend?.type === 'symbol' && config!.legend.items.length > 0;
 
         const isDragging = dragIdx === idx;
         const isOver = overIdx === idx && dragIdx !== idx;
@@ -233,8 +233,8 @@ export function ActiveLayersContent() {
               </div>
             )}
 
-            {/* Symbol legend — only shown when there are multiple items */}
-            {config!.legend?.type === 'symbol' && hasMultipleSymbols && (
+            {/* Symbol legend */}
+            {config!.legend?.type === 'symbol' && hasSymbols && (
               <div className="space-y-1 mb-3">
                 {config!.legend.items.map((item, i) => (
                   <div key={i} className="flex items-center gap-2">
