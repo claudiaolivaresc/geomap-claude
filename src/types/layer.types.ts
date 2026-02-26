@@ -46,6 +46,20 @@ export interface LegendSymbol {
 
 export type LayerLegend = LegendGradient | LegendSymbol;
 
+export interface RasterClassificationEntry {
+  value: number;
+  color: string;
+  label: string;
+}
+
+export interface RasterClassification {
+  min: number;
+  max: number;
+  unit: string;
+  interpolation: 'discrete' | 'linear';
+  entries: RasterClassificationEntry[];
+}
+
 export interface LayerMetadata {
   geothermalRelevance?: string;
   description: string;

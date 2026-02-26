@@ -1,4 +1,4 @@
-import type { LayerGroup, LayerConfig } from '@/types';
+import type { LayerGroup, LayerConfig, RasterClassification } from '@/types';
 import { TILESERVER_URLS } from './map.config';
 
 // Color ramps for raster layers (normalized 0-1 values)
@@ -56,6 +56,148 @@ export const COLOR_RAMPS: Record<string, unknown[]> = {
     0.975, '#4575b4',
     1.0, '#313695',
   ],
+  // ── Sequential ──────────────────────────────────────────
+  viridis: [
+    'step', ['raster-value'],
+    '#440154',
+    0.1, '#482777',
+    0.2, '#3f4a8a',
+    0.3, '#31678e',
+    0.4, '#26838f',
+    0.5, '#1f9d8a',
+    0.6, '#6cce5a',
+    0.7, '#b6de2b',
+    0.8, '#fee825',
+    1.0, '#fee825',
+  ],
+  inferno: [
+    'step', ['raster-value'],
+    '#000004',
+    0.1, '#160b39',
+    0.2, '#420a68',
+    0.3, '#6a176e',
+    0.4, '#932667',
+    0.5, '#bc3754',
+    0.6, '#dd513a',
+    0.7, '#f37819',
+    0.8, '#fca50a',
+    0.9, '#f6d746',
+    1.0, '#fcffa4',
+  ],
+  magma: [
+    'step', ['raster-value'],
+    '#000004',
+    0.1, '#140e36',
+    0.2, '#3b0f70',
+    0.3, '#641a80',
+    0.4, '#8c2981',
+    0.5, '#b73779',
+    0.6, '#de4968',
+    0.7, '#f7705c',
+    0.8, '#fe9f6d',
+    0.9, '#fecf92',
+    1.0, '#fcfdbf',
+  ],
+  plasma: [
+    'step', ['raster-value'],
+    '#0d0887',
+    0.1, '#3a049a',
+    0.2, '#6a00a8',
+    0.3, '#900da4',
+    0.4, '#b12a90',
+    0.5, '#cc4778',
+    0.6, '#e16462',
+    0.7, '#f2844b',
+    0.8, '#fca636',
+    0.9, '#fcce25',
+    1.0, '#f0f921',
+  ],
+  cividis: [
+    'step', ['raster-value'],
+    '#002051',
+    0.1, '#0a326a',
+    0.2, '#2b446e',
+    0.3, '#4d566d',
+    0.4, '#696970',
+    0.5, '#7f7c75',
+    0.6, '#968f6e',
+    0.7, '#b0a360',
+    0.8, '#ccb94c',
+    0.9, '#e8d02e',
+    1.0, '#fdea45',
+  ],
+  turbo: [
+    'step', ['raster-value'],
+    '#30123b',
+    0.1, '#4662d7',
+    0.2, '#36aaf9',
+    0.3, '#1ae4b6',
+    0.4, '#72fe5e',
+    0.5, '#c8ef34',
+    0.6, '#faba39',
+    0.7, '#f66b19',
+    0.8, '#d93806',
+    0.9, '#a11201',
+    1.0, '#7a0403',
+  ],
+  // ── Diverging ───────────────────────────────────────────
+  rdylgn: [
+    'step', ['raster-value'],
+    '#a50026',
+    0.1, '#d73027',
+    0.2, '#f46d43',
+    0.3, '#fdae61',
+    0.4, '#fee08b',
+    0.5, '#ffffbf',
+    0.6, '#d9ef8b',
+    0.7, '#a6d96a',
+    0.8, '#66bd63',
+    0.9, '#1a9850',
+    1.0, '#006837',
+  ],
+  spectral: [
+    'step', ['raster-value'],
+    '#9e0142',
+    0.1, '#d53e4f',
+    0.2, '#f46d43',
+    0.3, '#fdae61',
+    0.4, '#fee08b',
+    0.5, '#ffffbf',
+    0.6, '#e6f598',
+    0.7, '#abdda4',
+    0.8, '#66c2a5',
+    0.9, '#3288bd',
+    1.0, '#5e4fa2',
+  ],
+  coolwarm: [
+    'step', ['raster-value'],
+    '#3b4cc0',
+    0.1, '#5977e3',
+    0.2, '#7b9ff9',
+    0.3, '#9ebeff',
+    0.4, '#c0d4f5',
+    0.5, '#dddcdc',
+    0.6, '#f2cbb7',
+    0.7, '#f7a889',
+    0.8, '#ee7b5a',
+    0.9, '#d44e41',
+    1.0, '#b40426',
+  ],
+  // ── Mono ────────────────────────────────────────────────
+  greys: [
+    'step', ['raster-value'],
+    '#ffffff',
+    0.1, '#e6e6e6',
+    0.2, '#cccccc',
+    0.3, '#b3b3b3',
+    0.4, '#999999',
+    0.5, '#808080',
+    0.6, '#666666',
+    0.7, '#4d4d4d',
+    0.8, '#333333',
+    0.9, '#1a1a1a',
+    1.0, '#000000',
+  ],
 };
 
 // Gradient strings for legend display
@@ -64,7 +206,53 @@ export const GRADIENTS: Record<string, string> = {
   lab: 'linear-gradient(to right, #e9dde0, #e9c7cf, #e9a6a9, #e97775, #eba983, #ede594, #bff05e, #17dac3, #12cee8, #71c4eb, #3b6fd0, #242cb6)',
   moho: 'linear-gradient(to right, #ffffcc, #ffeda0, #fed976, #feb24c, #fd8d3c, #fc4e2a, #e31a1c, #bd0026, #800026)',
   velocity: 'linear-gradient(to right, #d73027, #f46d43, #fdae61, #fee090, #e0f3f8, #abd9e9, #74add1, #4575b4, #313695)',
+  viridis: 'linear-gradient(to right, #440154, #482777, #3f4a8a, #31678e, #26838f, #1f9d8a, #6cce5a, #b6de2b, #fee825)',
+  inferno: 'linear-gradient(to right, #000004, #160b39, #420a68, #6a176e, #932667, #bc3754, #dd513a, #f37819, #fca50a, #f6d746, #fcffa4)',
+  magma: 'linear-gradient(to right, #000004, #140e36, #3b0f70, #641a80, #8c2981, #b73779, #de4968, #f7705c, #fe9f6d, #fecf92, #fcfdbf)',
+  plasma: 'linear-gradient(to right, #0d0887, #3a049a, #6a00a8, #900da4, #b12a90, #cc4778, #e16462, #f2844b, #fca636, #fcce25, #f0f921)',
+  cividis: 'linear-gradient(to right, #002051, #0a326a, #2b446e, #4d566d, #696970, #7f7c75, #968f6e, #b0a360, #ccb94c, #e8d02e, #fdea45)',
+  turbo: 'linear-gradient(to right, #30123b, #4662d7, #36aaf9, #1ae4b6, #72fe5e, #c8ef34, #faba39, #f66b19, #d93806, #a11201, #7a0403)',
+  rdylgn: 'linear-gradient(to right, #a50026, #d73027, #f46d43, #fdae61, #fee08b, #ffffbf, #d9ef8b, #a6d96a, #66bd63, #1a9850, #006837)',
+  spectral: 'linear-gradient(to right, #9e0142, #d53e4f, #f46d43, #fdae61, #fee08b, #ffffbf, #e6f598, #abdda4, #66c2a5, #3288bd, #5e4fa2)',
+  coolwarm: 'linear-gradient(to right, #3b4cc0, #5977e3, #7b9ff9, #9ebeff, #c0d4f5, #dddcdc, #f2cbb7, #f7a889, #ee7b5a, #d44e41, #b40426)',
+  greys: 'linear-gradient(to right, #ffffff, #e6e6e6, #cccccc, #b3b3b3, #999999, #808080, #666666, #4d4d4d, #333333, #1a1a1a, #000000)',
 };
+
+/** Convert a RasterClassification into a MapLibre raster-color expression */
+export function buildRasterColorExpression(c: RasterClassification): unknown[] {
+  const sorted = [...c.entries].sort((a, b) => a.value - b.value);
+  const range = c.max - c.min;
+  const normalize = (v: number) => range === 0 ? 0 : Math.max(0, Math.min(1, (v - c.min) / range));
+
+  if (c.interpolation === 'linear') {
+    const expr: unknown[] = ['interpolate', ['linear'], ['raster-value']];
+    for (const e of sorted) {
+      expr.push(normalize(e.value), e.color);
+    }
+    return expr;
+  }
+
+  // Discrete (step)
+  if (sorted.length === 0) return ['step', ['raster-value'], '#000000'];
+  const expr: unknown[] = ['step', ['raster-value'], sorted[0].color];
+  for (let i = 1; i < sorted.length; i++) {
+    expr.push(normalize(sorted[i].value), sorted[i].color);
+  }
+  return expr;
+}
+
+/** Convert a RasterClassification into a CSS linear-gradient for preview */
+export function buildGradientFromClassification(c: RasterClassification): string {
+  const sorted = [...c.entries].sort((a, b) => a.value - b.value);
+  const range = c.max - c.min;
+  if (sorted.length === 0) return 'linear-gradient(to right, #ccc, #ccc)';
+
+  const stops = sorted.map((e) => {
+    const pct = range === 0 ? 0 : ((e.value - c.min) / range) * 100;
+    return `${e.color} ${pct.toFixed(1)}%`;
+  });
+  return `linear-gradient(to right, ${stops.join(', ')})`;
+}
 
 export const LAYER_GROUPS: LayerGroup[] = [
   {

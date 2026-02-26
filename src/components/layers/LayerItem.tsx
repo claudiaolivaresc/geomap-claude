@@ -66,9 +66,10 @@ export function LayerItem({ layer, depth }: LayerItemProps) {
       {/* Layer name */}
       <span
         className={cn(
-          'text-[13px] leading-tight flex-1 min-w-0 truncate',
+          'text-[13px] leading-tight flex-1 min-w-0',
           canAccess ? 'text-[#141d2d]' : 'text-[#8b94a7]'
         )}
+        title={layer.title}
         onClick={canAccess ? handleToggle : undefined}
       >
         {layer.title}

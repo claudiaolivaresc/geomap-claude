@@ -116,14 +116,16 @@ export function Sidebar() {
       </div>
 
       {/* Tab content */}
-      <ScrollArea className="flex-1 overflow-hidden">
-        {sidebarTab === 'layers' ? (
-          <div className="p-4">
-            <LayerTree />
-          </div>
-        ) : (
-          <ActiveLayersContent />
-        )}
+      <ScrollArea className="flex-1 min-h-0 [&>[data-slot=scroll-area-viewport]>div]:!block">
+        <div className="overflow-hidden">
+          {sidebarTab === 'layers' ? (
+            <div className="p-4">
+              <LayerTree />
+            </div>
+          ) : (
+            <ActiveLayersContent />
+          )}
+        </div>
       </ScrollArea>
     </div>
   );

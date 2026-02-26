@@ -3,7 +3,8 @@ import { persist } from 'zustand/middleware';
 import type { Map as MapboxMap } from 'mapbox-gl';
 import type { ActiveLayer, LayerConfig, VectorStyle } from '@/types';
 import { getAnyLayerById } from '@/lib/layerLookup';
-import { COLOR_RAMPS } from '@/config/layers.config';
+import { COLOR_RAMPS, buildRasterColorExpression } from '@/config/layers.config';
+import type { RasterClassification } from '@/types';
 import { useConfigStore } from './configStore';
 
 /** GIS stacking order: points on top (0), rasters at bottom (3) */
@@ -188,9 +189,12 @@ export const useLayerStore = create<LayerStore>()(
               'raster-opacity': (styleOv['raster-opacity'] as number) ?? layerConfig.defaultOpacity ?? 0.8,
             };
 
-            // Resolve color ramp: admin override key → COLOR_RAMPS lookup, else default
+            // Resolve color: classification → ramp key → default
+            const classification = styleOv['raster_classification'] as RasterClassification | undefined;
             const rampKey = styleOv['color_ramp'] as string;
-            if (rampKey && COLOR_RAMPS[rampKey]) {
+            if (classification?.entries?.length) {
+              rasterPaint['raster-color'] = buildRasterColorExpression(classification);
+            } else if (rampKey && COLOR_RAMPS[rampKey]) {
               rasterPaint['raster-color'] = COLOR_RAMPS[rampKey];
             } else if (rasterStyle.paint?.['raster-color']) {
               rasterPaint['raster-color'] = rasterStyle.paint['raster-color'];

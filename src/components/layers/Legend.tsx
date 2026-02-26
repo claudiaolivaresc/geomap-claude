@@ -165,7 +165,7 @@ export function ActiveLayersContent() {
   }
 
   return (
-    <div className="p-3 space-y-1">
+    <div className="p-3 space-y-1 overflow-hidden">
       {activeLayersList.map(({ id, state, config }, idx) => {
         const hasSymbols =
           config!.legend?.type === 'symbol' && config!.legend.items.length > 0;
@@ -182,7 +182,7 @@ export function ActiveLayersContent() {
             onDrop={(e) => handleDrop(e, idx)}
             onDragEnd={handleDragEnd}
             className={cn(
-              'p-3 bg-white rounded-lg border transition-all',
+              'p-3 bg-white rounded-lg border transition-all min-w-0',
               isDragging && 'opacity-40 scale-95',
               isOver
                 ? 'border-[#ffa925] shadow-md shadow-[#ffa925]/20'
@@ -224,10 +224,10 @@ export function ActiveLayersContent() {
                 />
                 <div className="flex justify-between mt-1">
                   <span className="text-xs text-gray-500">
-                    {config!.legend.min}
+                    {Math.round(config!.legend.min * 100) / 100}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {config!.legend.max} {config!.legend.unit}
+                    {Math.round(config!.legend.max * 100) / 100} {config!.legend.unit}
                   </span>
                 </div>
               </div>
@@ -266,7 +266,7 @@ export function ActiveLayersContent() {
       {visibleUploads.map((ul) => (
         <div
           key={ul.id}
-          className="p-3 bg-white rounded-lg border border-dashed border-[#ff6b35]/50"
+          className="p-3 bg-white rounded-lg border border-dashed border-[#ff6b35]/50 min-w-0"
         >
           <div className="flex items-center gap-2 mb-2">
             <div

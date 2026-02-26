@@ -114,8 +114,8 @@ export function LegendConfigForm({ legend, onChange }: LegendConfigFormProps) {
           <div>
             <div className="h-4 rounded" style={{ background: gradientLegend.gradient }} />
             <div className="flex justify-between mt-1">
-              <span className="text-xs text-gray-500">{gradientLegend.min}</span>
-              <span className="text-xs text-gray-500">{gradientLegend.max} {gradientLegend.unit}</span>
+              <span className="text-xs text-gray-500">{Math.round(gradientLegend.min * 100) / 100}</span>
+              <span className="text-xs text-gray-500">{Math.round(gradientLegend.max * 100) / 100} {gradientLegend.unit}</span>
             </div>
           </div>
 
