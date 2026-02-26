@@ -42,7 +42,7 @@ export function MapCanvas() {
     // Add scale control
     map.addControl(
       new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }),
-      'bottom-right'
+      'bottom-left'
     );
 
     // Add attribution control

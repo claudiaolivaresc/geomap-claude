@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Header, Sidebar } from '@/components/layout';
-import { MapCanvas, MapControls, MeasureTool } from '@/components/map';
+import { MapCanvas, MapControls, MapExportDialog, MeasureTool } from '@/components/map';
 import { LayerInfoModal } from '@/components/layers';
 import { useUIStore, useConfigStore } from '@/stores';
 
@@ -60,6 +60,7 @@ export default function Home() {
 
       {/* Layer Info Modal */}
       <LayerInfoModal />
+      <MapExportDialog />
     </div>
   );
 }

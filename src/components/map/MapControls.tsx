@@ -1,6 +1,6 @@
 'use client';
 
-import { Layers, Map, Compass } from 'lucide-react';
+import { Layers, Map, Compass, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import { MAP_CONFIG } from '@/config';
 
 export function MapControls() {
   const { currentBasemap, setBasemap, resetView } = useMapStore();
-  const { toggleSidebarCollapsed, sidebarCollapsed } = useUIStore();
+  const { toggleSidebarCollapsed, sidebarCollapsed, setExportDialogOpen } = useUIStore();
 
   return (
     <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
@@ -59,6 +59,16 @@ export function MapControls() {
         onClick={resetView}
       >
         <Compass className="h-4 w-4" />
+      </Button>
+
+      {/* Export map button */}
+      <Button
+        variant="secondary"
+        size="icon"
+        className="bg-white shadow-md hover:bg-gray-50"
+        onClick={() => setExportDialogOpen(true)}
+      >
+        <Image className="h-4 w-4" />
       </Button>
     </div>
   );
