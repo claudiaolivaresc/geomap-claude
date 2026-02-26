@@ -116,6 +116,14 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Center the map scale control at the bottom */
+.mapboxgl-ctrl-bottom-left .mapboxgl-ctrl-scale {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

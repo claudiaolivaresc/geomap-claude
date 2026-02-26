@@ -9,6 +9,7 @@ interface UIState {
   layerInfoModalOpen: boolean;
   selectedLayerForInfo: string | null;
   upgradeModalOpen: boolean;
+  exportDialogOpen: boolean;
   basemapSwitcherOpen: boolean;
   searchQuery: string;
   isMobile: boolean;
@@ -26,6 +27,7 @@ interface UIActions {
   openLayerInfo: (layerId: string) => void;
   closeLayerInfo: () => void;
   setUpgradeModalOpen: (open: boolean) => void;
+  setExportDialogOpen: (open: boolean) => void;
   setBasemapSwitcherOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
   setIsMobile: (isMobile: boolean) => void;
@@ -43,6 +45,7 @@ export const useUIStore = create<UIStore>()((set) => ({
   layerInfoModalOpen: false,
   selectedLayerForInfo: null,
   upgradeModalOpen: false,
+  exportDialogOpen: false,
   basemapSwitcherOpen: false,
   searchQuery: '',
   isMobile: false,
@@ -66,6 +69,8 @@ export const useUIStore = create<UIStore>()((set) => ({
     set({ layerInfoModalOpen: false, selectedLayerForInfo: null }),
 
   setUpgradeModalOpen: (open) => set({ upgradeModalOpen: open }),
+
+  setExportDialogOpen: (open) => set({ exportDialogOpen: open }),
 
   setBasemapSwitcherOpen: (open) => set({ basemapSwitcherOpen: open }),
 
