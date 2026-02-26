@@ -10,7 +10,10 @@ import { InfoTab } from './InfoTab';
 import { PermissionsForm } from './PermissionsForm';
 import { SaveButton } from './SaveButton';
 import { PublishToggle } from './PublishToggle';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { getAllGroupIds } from '@/config/layers.config';
+import { useConfigStore } from '@/stores';
 import type { AdminLayerView, FieldEntry } from '@/types/admin.types';
 import type { LayerLegend, LayerPermissions } from '@/types';
 
@@ -46,7 +49,15 @@ export function AdminTabs({ layer }: AdminTabsProps) {
   );
   const [defaultOpacity, setDefaultOpacity] = useState(layer.defaultOpacity ?? 1);
 
-  const allGroups = useMemo(() => getAllGroupIds(), []);
+  const customGroups = useConfigStore((s) => s.customGroups);
+  const fetchOverrides = useConfigStore((s) => s.fetchOverrides);
+  const allGroups = useMemo(() => getAllGroupIds(customGroups), [customGroups]);
+
+  // New group form state
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [newGroupTitle, setNewGroupTitle] = useState('');
+  const [newGroupParent, setNewGroupParent] = useState('');
+  const [creatingGroup, setCreatingGroup] = useState(false);
 
   // Extract group_id from the group path on initial load (works for both static and dynamic)
   useEffect(() => {
@@ -166,7 +177,16 @@ export function AdminTabs({ layer }: AdminTabsProps) {
         )}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-sm font-medium">Group</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Group</Label>
+              <button
+                type="button"
+                onClick={() => setShowNewGroup(!showNewGroup)}
+                className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
+              >
+                <Plus className="h-3 w-3" /> New Group
+              </button>
+            </div>
             <select
               value={groupId}
               onChange={(e) => setGroupId(e.target.value)}
@@ -179,6 +199,72 @@ export function AdminTabs({ layer }: AdminTabsProps) {
                 </option>
               ))}
             </select>
+            {showNewGroup && (
+              <div className="mt-2 p-3 border border-indigo-200 rounded-md bg-white space-y-2">
+                <Input
+                  value={newGroupTitle}
+                  onChange={(e) => setNewGroupTitle(e.target.value)}
+                  placeholder="Group name"
+                  className="h-8 text-sm"
+                />
+                <select
+                  value={newGroupParent}
+                  onChange={(e) => setNewGroupParent(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm"
+                >
+                  <option value="">Top level</option>
+                  {allGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.path}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs"
+                    disabled={!newGroupTitle.trim() || creatingGroup}
+                    onClick={async () => {
+                      setCreatingGroup(true);
+                      try {
+                        const res = await fetch('/api/admin/groups', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            title: newGroupTitle.trim(),
+                            parent_id: newGroupParent || null,
+                          }),
+                        });
+                        if (res.ok) {
+                          const data = await res.json();
+                          setGroupId(data.group.id);
+                          setNewGroupTitle('');
+                          setNewGroupParent('');
+                          setShowNewGroup(false);
+                          await fetchOverrides();
+                        }
+                      } finally {
+                        setCreatingGroup(false);
+                      }
+                    }}
+                  >
+                    {creatingGroup ? 'Creating...' : 'Create'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setShowNewGroup(false);
+                      setNewGroupTitle('');
+                      setNewGroupParent('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
           <div>
             <Label className="text-sm font-medium">Default Opacity</Label>

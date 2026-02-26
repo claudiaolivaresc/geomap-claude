@@ -2973,7 +2973,9 @@ export function colorStopsToGradient(stops: { position: number; color: string }[
 }
 
 // Flatten group tree into id/title pairs for group selector
-export function getAllGroupIds(): { id: string; title: string; path: string }[] {
+export function getAllGroupIds(
+  customGroups?: { id: string; title: string; parent_id: string | null }[]
+): { id: string; title: string; path: string }[] {
   const result: { id: string; title: string; path: string }[] = [];
   function walk(groups: LayerGroup[], parentPath = '') {
     for (const g of groups) {
@@ -2983,6 +2985,19 @@ export function getAllGroupIds(): { id: string; title: string; path: string }[] 
     }
   }
   walk(LAYER_GROUPS);
+
+  // Append custom (DB) groups with resolved paths
+  if (customGroups?.length) {
+    const pathMap = new Map(result.map((r) => [r.id, r.path]));
+    for (const cg of customGroups) {
+      if (pathMap.has(cg.id)) continue; // skip duplicates
+      const parentPath = cg.parent_id ? pathMap.get(cg.parent_id) : undefined;
+      const path = parentPath ? `${parentPath} > ${cg.title}` : cg.title;
+      result.push({ id: cg.id, title: cg.title, path });
+      pathMap.set(cg.id, path);
+    }
+  }
+
   return result;
 }
 

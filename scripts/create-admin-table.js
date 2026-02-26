@@ -38,6 +38,19 @@ async function main() {
     await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS default_opacity REAL DEFAULT 1.0`);
     await pool.query(`ALTER TABLE public.layer_admin_config ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0`);
 
+    // Phase 5: Custom layer groups
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS public.layer_groups (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        parent_id TEXT,
+        color TEXT DEFAULT '#6366f1',
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    console.log('Table layer_groups created/verified');
+
     console.log('All columns added successfully');
   } catch (e) {
     console.error('Error:', e.message);

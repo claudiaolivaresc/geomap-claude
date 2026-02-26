@@ -5,6 +5,7 @@ import { LAYER_GROUPS } from '@/config';
 import { useConfigStore } from '@/stores';
 import { LayerGroup } from './LayerGroup';
 import type { LayerGroup as LayerGroupType, LayerConfig } from '@/types';
+import type { CustomGroup } from '@/stores/configStore';
 
 function filterPublished(groups: LayerGroupType[], isPublished: (id: string) => boolean): LayerGroupType[] {
   return groups
@@ -116,8 +117,40 @@ function injectDynamicLayers(tree: LayerGroupType[], dynamicConfigs: LayerConfig
   return tree;
 }
 
+/** Inject custom (DB-defined) groups into the tree */
+function injectCustomGroups(tree: LayerGroupType[], customGroups: CustomGroup[]) {
+  // Sort so parents are processed before children
+  const sorted = [...customGroups].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+
+  for (const cg of sorted) {
+    // Skip if already in tree (shouldn't happen, but guard)
+    if (findGroupById(tree, cg.id)) continue;
+
+    const node: LayerGroupType = {
+      id: cg.id,
+      title: cg.title,
+      color: cg.color || '#6366f1',
+      defaultExpanded: true,
+      layers: [],
+      children: [],
+    };
+
+    if (cg.parent_id) {
+      const parent = findGroupById(tree, cg.parent_id);
+      if (parent) {
+        if (!parent.children) parent.children = [];
+        parent.children.push(node);
+        continue;
+      }
+    }
+
+    // No parent or parent not found → top-level
+    tree.push(node);
+  }
+}
+
 export function LayerTree() {
-  const { isLayerPublished, isLoaded, getDynamicLayers, getOverride } = useConfigStore();
+  const { isLayerPublished, isLoaded, getDynamicLayers, getOverride, getCustomGroups } = useConfigStore();
 
   const visibleGroups = useMemo(() => {
     if (!isLoaded) return LAYER_GROUPS;
@@ -128,17 +161,23 @@ export function LayerTree() {
     // 2. Clone tree so we can mutate it
     const tree = cloneTree(filtered);
 
-    // 3. Relocate static layers that have a group_id override
+    // 3. Inject custom (DB) groups so they are available as targets
+    const customGroups = getCustomGroups();
+    if (customGroups.length > 0) {
+      injectCustomGroups(tree, customGroups);
+    }
+
+    // 4. Relocate static layers that have a group_id override
     relocateStaticLayers(tree, getOverride);
 
-    // 4. Get published dynamic layers and inject them into the tree
+    // 5. Get published dynamic layers and inject them into the tree
     const dynamicConfigs = getDynamicLayers();
     if (dynamicConfigs.length > 0) {
       injectDynamicLayers(tree, dynamicConfigs, getOverride);
     }
 
     return tree;
-  }, [isLoaded, isLayerPublished, getDynamicLayers, getOverride]);
+  }, [isLoaded, isLayerPublished, getDynamicLayers, getOverride, getCustomGroups]);
 
   return (
     <div className="space-y-2">

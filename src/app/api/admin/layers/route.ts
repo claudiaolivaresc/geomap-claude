@@ -17,8 +17,11 @@ function findGroupForLayer(layerId: string, groups: LayerGroup[], parentTitle = 
   return '';
 }
 
-function findGroupPathById(groupId: string): string {
-  const allGroups = getAllGroupIds();
+function findGroupPathById(
+  groupId: string,
+  customGroups?: { id: string; title: string; parent_id: string | null }[]
+): string {
+  const allGroups = getAllGroupIds(customGroups);
   const match = allGroups.find((g) => g.id === groupId);
   return match?.path || groupId || 'Uncategorized';
 }
@@ -26,6 +29,15 @@ function findGroupPathById(groupId: string): string {
 export async function GET() {
   const allLayers = getAllLayers();
   const pool = getPool();
+
+  // Fetch custom groups from DB
+  let customGroups: { id: string; title: string; parent_id: string | null }[] = [];
+  if (pool) {
+    try {
+      const gResult = await pool.query('SELECT id, title, parent_id FROM public.layer_groups ORDER BY display_order, title');
+      customGroups = gResult.rows;
+    } catch { /* table may not exist yet */ }
+  }
 
   // Fetch ALL admin config rows from DB
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -60,7 +72,7 @@ export async function GET() {
     // If the layer has a group_id override, use that path instead of the static config path
     const groupOverrideId = override?.group_id;
     const group = groupOverrideId
-      ? findGroupPathById(groupOverrideId)
+      ? findGroupPathById(groupOverrideId, customGroups)
       : findGroupForLayer(layer.id, LAYER_GROUPS);
 
     return {
@@ -104,7 +116,7 @@ export async function GET() {
       type: (row.layer_type as 'raster' | 'vector') || 'vector',
       schema: row.schema_name,
       table: row.table_name,
-      group: findGroupPathById(row.group_id),
+      group: findGroupPathById(row.group_id, customGroups),
       vectorStyleType: row.vector_style_type as 'circle' | 'line' | 'fill' | undefined,
       defaultOpacity: row.default_opacity ?? 1,
       style_overrides: row.style_overrides || {},

@@ -21,8 +21,17 @@ export interface AdminOverrideEntry {
   default_opacity?: number;
 }
 
+export interface CustomGroup {
+  id: string;
+  title: string;
+  parent_id: string | null;
+  color: string;
+  display_order?: number;
+}
+
 interface ConfigState {
   overrides: Map<string, AdminOverrideEntry>;
+  customGroups: CustomGroup[];
   isLoaded: boolean;
 }
 
@@ -31,6 +40,7 @@ interface ConfigActions {
   getOverride: (layerId: string) => AdminOverrideEntry | undefined;
   isLayerPublished: (layerId: string) => boolean;
   getDynamicLayers: () => LayerConfig[];
+  getCustomGroups: () => CustomGroup[];
 }
 
 // ── Helpers for building dynamic LayerConfig from DB entries ──
@@ -138,21 +148,31 @@ function buildDynamicLayerConfig(id: string, entry: AdminOverrideEntry): LayerCo
 
 export const useConfigStore = create<ConfigState & ConfigActions>()((set, get) => ({
   overrides: new Map(),
+  customGroups: [],
   isLoaded: false,
 
   fetchOverrides: async () => {
     try {
-      const res = await fetch('/api/layers/overrides');
-      if (res.ok) {
-        const data = await res.json();
-        const map = new Map<string, AdminOverrideEntry>();
+      const [overridesRes, groupsRes] = await Promise.all([
+        fetch('/api/layers/overrides'),
+        fetch('/api/admin/groups').catch(() => null),
+      ]);
+
+      const map = new Map<string, AdminOverrideEntry>();
+      if (overridesRes.ok) {
+        const data = await overridesRes.json();
         for (const [id, entry] of Object.entries(data.overrides)) {
           map.set(id, entry as AdminOverrideEntry);
         }
-        set({ overrides: map, isLoaded: true });
-      } else {
-        set({ isLoaded: true });
       }
+
+      let customGroups: CustomGroup[] = [];
+      if (groupsRes?.ok) {
+        const gData = await groupsRes.json();
+        customGroups = gData.groups || [];
+      }
+
+      set({ overrides: map, customGroups, isLoaded: true });
     } catch {
       set({ isLoaded: true });
     }
@@ -174,4 +194,6 @@ export const useConfigStore = create<ConfigState & ConfigActions>()((set, get) =
     }
     return configs;
   },
+
+  getCustomGroups: () => get().customGroups,
 }));
