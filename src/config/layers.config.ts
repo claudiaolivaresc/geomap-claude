@@ -2815,6 +2815,110 @@ export const LAYER_GROUPS: LayerGroup[] = [
               },
             ],
           },
+          // ── Vs Tests (3857 Projection) ─────────────────────────────
+          {
+            id: 'vs-tests-3857',
+            title: 'Vs Tests (3857)',
+            color: '#10b981',
+            layers: [
+              {
+                id: 'gl_vs_110_tests_3857',
+                type: 'raster',
+                title: 'Vs 110km (3857)',
+                schema: 'subsurface',
+                table: 'gl_vs_110_tests_3857',
+                source: {
+                  type: 'raster',
+                  tiles: [`${TILESERVER_URLS.raster}/tiles/subsurface.gl_vs_110_tests_3857/{z}/{x}/{y}.png`],
+                  tileSize: 256,
+                  minzoom: 0,
+                  maxzoom: 8,
+                },
+                style: {
+                  paint: {
+                    'raster-opacity': 0.8,
+                  },
+                },
+                legend: {
+                  type: 'gradient',
+                  min: 4.0,
+                  max: 5.0,
+                  unit: 'km/s',
+                  gradient: GRADIENTS.velocity,
+                },
+                metadata: {
+                  description: 'Shear wave velocity at 110km depth — EPSG:3857 projection test.',
+                },
+                permissions: { visibility: 'public', allowedCompanies: [] },
+                defaultVisible: false,
+                defaultOpacity: 0.8,
+              },
+              {
+                id: 'gl_vs_150_tests_3857',
+                type: 'raster',
+                title: 'Vs 150km (3857)',
+                schema: 'subsurface',
+                table: 'gl_vs_150_tests_3857',
+                source: {
+                  type: 'raster',
+                  tiles: [`${TILESERVER_URLS.raster}/tiles/subsurface.gl_vs_150_tests_3857/{z}/{x}/{y}.png`],
+                  tileSize: 256,
+                  minzoom: 0,
+                  maxzoom: 8,
+                },
+                style: {
+                  paint: {
+                    'raster-opacity': 0.8,
+                  },
+                },
+                legend: {
+                  type: 'gradient',
+                  min: 4.0,
+                  max: 5.0,
+                  unit: 'km/s',
+                  gradient: GRADIENTS.velocity,
+                },
+                metadata: {
+                  description: 'Shear wave velocity at 150km depth — EPSG:3857 projection test.',
+                },
+                permissions: { visibility: 'public', allowedCompanies: [] },
+                defaultVisible: false,
+                defaultOpacity: 0.8,
+              },
+              {
+                id: 'gl_vs_avg_110_150_tests_3857',
+                type: 'raster',
+                title: 'Vs Avg 110-150km (3857)',
+                schema: 'subsurface',
+                table: 'gl_vs_avg_110_150_tests_3857',
+                source: {
+                  type: 'raster',
+                  tiles: [`${TILESERVER_URLS.raster}/tiles/subsurface.gl_vs_avg_110_150_tests_3857/{z}/{x}/{y}.png`],
+                  tileSize: 256,
+                  minzoom: 0,
+                  maxzoom: 8,
+                },
+                style: {
+                  paint: {
+                    'raster-opacity': 0.8,
+                  },
+                },
+                legend: {
+                  type: 'gradient',
+                  min: 4.0,
+                  max: 5.0,
+                  unit: 'km/s',
+                  gradient: GRADIENTS.velocity,
+                },
+                metadata: {
+                  description: 'Average shear wave velocity between 110-150km depth — EPSG:3857 projection test.',
+                },
+                permissions: { visibility: 'public', allowedCompanies: [] },
+                defaultVisible: false,
+                defaultOpacity: 0.8,
+              },
+            ],
+          },
         ],
       },
     ],
