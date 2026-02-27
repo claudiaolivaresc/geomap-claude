@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+
 import type { Map as MapboxMap } from 'mapbox-gl';
 import type { ActiveLayer, LayerConfig, VectorStyle } from '@/types';
 import { getAnyLayerById } from '@/lib/layerLookup';
@@ -63,11 +63,10 @@ interface LayerActions {
 type LayerStore = LayerState & LayerActions;
 
 export const useLayerStore = create<LayerStore>()(
-  persist(
     (set, get) => ({
       // State
       activeLayers: new Map(),
-      expandedGroups: new Set(['global', 'surface-module', 'subsurface']),
+      expandedGroups: new Set<string>(),
 
       // Actions
       toggleLayer: (layerId) => {
@@ -323,27 +322,5 @@ export const useLayerStore = create<LayerStore>()(
         const { activeLayers } = get();
         return activeLayers.get(layerId);
       },
-    }),
-    {
-      name: 'geomap-layer-store',
-      partialize: (state) => ({
-        activeLayers: Array.from(state.activeLayers.entries()),
-        expandedGroups: Array.from(state.expandedGroups),
-      }),
-      merge: (persisted, current) => {
-        const persistedState = persisted as {
-          activeLayers?: [string, ActiveLayer][];
-          expandedGroups?: string[];
-        };
-        // Re-sort persisted layers by type rank so panel + map order is correct
-        const entries = persistedState.activeLayers || [];
-        entries.sort((a, b) => getLayerTypeRank(a[0]) - getLayerTypeRank(b[0]));
-        return {
-          ...current,
-          activeLayers: new Map(entries),
-          expandedGroups: new Set(persistedState.expandedGroups || ['global', 'surface-module', 'subsurface']),
-        };
-      },
-    }
-  )
+    })
 );

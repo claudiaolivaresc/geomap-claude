@@ -82,7 +82,6 @@ export const useMapStore = create<MapStore>()(
     {
       name: 'geomap-map-store',
       partialize: (state) => ({
-        viewport: state.viewport,
         currentBasemap: state.currentBasemap,
       }),
     }
