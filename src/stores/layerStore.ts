@@ -335,9 +335,12 @@ export const useLayerStore = create<LayerStore>()(
           activeLayers?: [string, ActiveLayer][];
           expandedGroups?: string[];
         };
+        // Re-sort persisted layers by type rank so panel + map order is correct
+        const entries = persistedState.activeLayers || [];
+        entries.sort((a, b) => getLayerTypeRank(a[0]) - getLayerTypeRank(b[0]));
         return {
           ...current,
-          activeLayers: new Map(persistedState.activeLayers || []),
+          activeLayers: new Map(entries),
           expandedGroups: new Set(persistedState.expandedGroups || ['global', 'surface-module', 'subsurface']),
         };
       },

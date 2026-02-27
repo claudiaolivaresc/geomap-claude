@@ -51,6 +51,7 @@ export function ActiveLayersContent() {
   const dragNode = useRef<HTMLDivElement | null>(null);
 
   // Get active layers with their configs
+  // Order comes from the store (insertLayerSorted on add, drag-and-drop after)
   const activeLayersList = Array.from(activeLayers.entries())
     .filter(([, state]) => state.visible)
     .map(([id, state]) => ({
